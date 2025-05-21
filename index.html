@@ -399,32 +399,27 @@ tr:hover {
   <div class="container">
     <!-- Sidebar (Visible on Load) -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h1>Trading Bot</h1>
-        <button class="sidebar-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
-      </div>
-      <div class="wallet-section">
-        <button id="connectButton" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
-        <button id="disconnectButton" class="btn btn-secondary" onclick="disconnectWallet()" style="display: none;">Disconnect Wallet</button>
-        <p id="walletStatus">Wallet: Not Connected</p>
-        <p id="nativeBalance">Native Balance: 0 MATIC</p>
-        <p id="pnlStatus">PnL: $0.00 (Since 12:00 AM WAT)</p>
-      </div>
-      <div class="contract-status">
-  <p id="contractStatus">Contract Status: Not Connected</p>
-  <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()" style="display: none;">Pause Contract</button>
-  <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
-</div>
-      <div class="timeframe-section">
-        <label for="timeframe">Timeframe:</label>
-        <select id="timeframe" onchange="setTimeframe()">
-          <option value="1m">1 Minute</option>
-          <option value="5m" selected>5 Minutes</option>
-          <option value="15m">15 Minutes</option>
-          <option value="1h">1 Hour</option>
-        </select>
-      </div>
-    </aside>
+  <div class="sidebar-header">
+    <h1>Trading Bot</h1>
+    <button class="sidebar-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
+  </div>
+  <div class="wallet-section">
+    <button id="connectButton" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+    <button id="disconnectButton" class="btn btn-secondary" onclick="disconnectWallet()" style="display: none;">Disconnect Wallet</button>
+    <p id="walletStatus">Wallet: Not Connected</p>
+    <p id="nativeBalance">Native Balance: 0 MATIC</p>
+    <p id="pnlStatus">PnL: $0.00 (Since 12:00 AM WAT)</p>
+  </div>
+  <div class="timeframe-section">
+    <label for="timeframe">Timeframe:</label>
+    <select id="timeframe" onchange="setTimeframe()">
+      <option value="1m">1 Minute</option>
+      <option value="5m" selected>5 Minutes</option>
+      <option value="15m">15 Minutes</option>
+      <option value="1h">1 Hour</option>
+    </select>
+  </div>
+</aside>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -435,6 +430,16 @@ tr:hover {
         <p id="priceStatus">Prices: Loading...</p>
       </header>
 
+  <!-- Contract Status -->
+  <section class="card contract-status">
+    <h3>Contract Status</h3>
+    <p id="contractStatus">Contract Status: Not Connected</p>
+    <div class="action-buttons">
+      <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()" style="display: none;">Pause Contract</button>
+      <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
+    </div>
+  </section>
+  
       <!-- Current Tokens -->
       <section class="card current-tokens">
         <h3>Current Tokens</h3>
@@ -1798,56 +1803,110 @@ tr:hover {
     }
 
     // Connect wallet
-    async function connectWallet() {
-      if (!window.ethereum) {
-        logMessage("MetaMask not detected");
+async function connectWallet() {
+  if (!window.ethereum) {
+    logMessage("MetaMask not detected. Please install MetaMask.");
+    return;
+  }
+  try {
+    web3 = new Web3(window.ethereum);
+    // Request accounts
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    account = accounts[0];
+    // Check Polygon network (chain ID 137)
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    if (parseInt(chainId, 16) !== 137) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x89' }], // Polygon Mainnet
+        });
+      } catch (switchError) {
+        logMessage("Please switch to the Polygon network in MetaMask.");
         return;
       }
-      try {
-        web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        account = (await web3.eth.getAccounts())[0];
-        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-        document.getElementById("walletStatus").innerText = `Wallet: ${account}`;
-        logMessage(`Connected wallet: ${account}`);
-        document.getElementById('connectButton').style.display = 'none';
-        document.getElementById('disconnectButton').style.display = 'block';
-        updateTokenInfo();
-        updateCurrentTokens();
-        updatePrices();
-        updateBudgetStatus();
-        updateWalletBalances();
-        updateWithdrawDropdown();
-        updateNativeBalance();
-        updatePnL();
-        updateContractStatus();
-        updateTransactionLog();
-        setInterval(updatePnL, 10 * 60 * 1000);
-        setInterval(updateNativeBalance, 30 * 1000);
-      } catch (error) {
-        logMessage('Failed to connect wallet. Please try again.');
-      }
     }
+    contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    document.getElementById("walletStatus").innerText = `Wallet: ${account}`;
+    logMessage(`Connected wallet: ${account}`);
+    document.getElementById('connectButton').style.display = 'none';
+    document.getElementById('disconnectButton').style.display = 'block';
+    updateTokenInfo();
+    updateCurrentTokens();
+    updatePrices();
+    updateBudgetStatus();
+    updateWalletBalances();
+    updateWithdrawDropdown();
+    updateNativeBalance();
+    updatePnL();
+    updateContractStatus();
+    updateTransactionLog();
+    // Store intervals for disconnection
+    window.pnlInterval = setInterval(updatePnL, 10 * 60 * 1000); // Update PnL every 10 minutes
+    window.balanceInterval = setInterval(updateNativeBalance, 30 * 1000); // Update balance every 30 seconds
+  } catch (error) {
+    if (error.code === 4001) {
+      logMessage("Wallet connection rejected by user.");
+    } else if (error.code === -32002) {
+      logMessage("Wallet connection request already pending in MetaMask.");
+    } else {
+      logMessage(`Failed to connect wallet: ${error.message}`);
+    }
+  }
+}
 
     // Disconnect wallet
-    function disconnectWallet() {
-      account = null;
-      contract = null;
-      web3 = null;
-      tokenIn = null;
-      tokenOut = null;
-      priceFeedIn = null;
-      priceFeedOut = null;
-      document.getElementById('walletStatus').innerText = 'Wallet: Not Connected';
-      document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
-      logMessage('Wallet disconnected');
-      document.getElementById('connectButton').style.display = 'block';
-      document.getElementById('disconnectButton').style.display = 'none';
-      document.getElementById("currentTokenIn").innerText = 'Token In: Not Set';
-      document.getElementById("currentTokenOut").innerText = 'Token Out: Not Set';
-      document.getElementById("tokenInInfo").innerText = 'Balance: 0.0000 | Value: $0.00';
-      document.getElementById("tokenOutInfo").innerText = 'Balance: 0.0000 | Value: $0.00';
-    }
+function disconnectWallet() {
+  // Reset global state
+  account = null;
+  contract = null;
+  web3 = null;
+  tokenIn = null;
+  tokenOut = null;
+  priceFeedIn = null;
+  priceFeedOut = null;
+  autoTradingActive = false;
+  clearInterval(autoTradingInterval); // Clear auto-trading interval
+  clearInterval(window.pnlInterval); // Clear PnL update interval
+  clearInterval(window.balanceInterval); // Clear native balance update interval
+
+  // Reset UI elements
+  document.getElementById('walletStatus').innerText = 'Wallet: Not Connected';
+  document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
+  document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
+  document.getElementById('contractStatus').innerText = 'Contract Status: Not Connected';
+  document.getElementById('pauseButton').style.display = 'none';
+  document.getElementById('unpauseButton').style.display = 'none';
+  document.getElementById('currentTokenIn').innerText = 'Token In: Not Set';
+  document.getElementById('currentTokenOut').innerText = 'Token Out: Not Set';
+  document.getElementById('tokenInInfo').innerText = 'Balance: 0.0000 | Value: $0.00';
+  document.getElementById('tokenOutInfo').innerText = 'Balance: 0.0000 | Value: $0.00';
+  document.getElementById('priceStatus').innerText = 'Prices: Loading...';
+  document.getElementById('autoTradingStatus').innerText = 'Auto-Trading: Off';
+  document.getElementById('toggleAutoTrading').innerText = 'Toggle Auto-Trading (Off)';
+  document.getElementById('buyResult').innerText = 'Result: None';
+  document.getElementById('sellResult').innerText = 'Result: None';
+  document.getElementById('topUpResult').innerText = 'Result: None';
+  document.getElementById('withdrawResult').innerText = 'Result: None';
+  document.getElementById('budgetStatus').innerText = 'Budget: 0 MATIC';
+  document.getElementById('analysisResult').innerText = 'Market Analysis: Loading...';
+
+  // Clear tables
+  document.getElementById('walletBalances').getElementsByTagName('tbody')[0].innerHTML = '';
+  document.getElementById('tokenSignals').getElementsByTagName('tbody')[0].innerHTML = '';
+  document.getElementById('logTable').getElementsByTagName('tbody')[0].innerHTML = '';
+
+  // Reset withdraw dropdown
+  const withdrawSelect = document.getElementById('withdrawToken');
+  withdrawSelect.innerHTML = '<option value="" disabled selected>Select Token</option>';
+
+  // Update button visibility
+  document.getElementById('connectButton').style.display = 'block';
+  document.getElementById('disconnectButton').style.display = 'none';
+
+  // Log disconnection
+  logMessage('Wallet disconnected');
+}
 
     // Check contract paused state
     async function isContractPaused() {
