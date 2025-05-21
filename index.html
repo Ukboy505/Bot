@@ -1808,11 +1808,21 @@ async function connectWallet() {
     logMessage("MetaMask not detected. Please install MetaMask.");
     return;
   }
+
+  // Initialize web3 safely
+  let localWeb3;
   try {
-    web3 = new Web3(window.ethereum);
+    localWeb3 = new Web3(window.ethereum);
+  } catch (initError) {
+    logMessage(`Failed to initialize Web3: ${initError.message}`);
+    return;
+  }
+
+  try {
     // Request accounts
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     account = accounts[0];
+
     // Check Polygon network (chain ID 137)
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
     if (parseInt(chainId, 16) !== 137) {
@@ -1826,11 +1836,18 @@ async function connectWallet() {
         return;
       }
     }
+
+    // Assign global web3 and initialize contract
+    web3 = localWeb3;
     contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+
+    // Update UI
     document.getElementById("walletStatus").innerText = `Wallet: ${account}`;
     logMessage(`Connected wallet: ${account}`);
     document.getElementById('connectButton').style.display = 'none';
     document.getElementById('disconnectButton').style.display = 'block';
+
+    // Trigger UI updates
     updateTokenInfo();
     updateCurrentTokens();
     updatePrices();
@@ -1841,6 +1858,7 @@ async function connectWallet() {
     updatePnL();
     updateContractStatus();
     updateTransactionLog();
+
     // Store intervals for disconnection
     window.pnlInterval = setInterval(updatePnL, 10 * 60 * 1000); // Update PnL every 10 minutes
     window.balanceInterval = setInterval(updateNativeBalance, 30 * 1000); // Update balance every 30 seconds
@@ -2120,28 +2138,36 @@ async function updateContractStatus() {
     }
 
     // Update native balance
-    async function updateNativeBalance() {
-      if (!contract) return;
-      try {
-        const balance = await contract.methods.getBalance().call();
-        const formattedBalance = web3.utils.fromWei(balance, 'ether');
-        document.getElementById("nativeBalance").innerText = `Native Balance: ${parseFloat(formattedBalance).toFixed(4)} MATIC`;
-      } catch (error) {
-        logMessage('Failed to fetch native balance.');
-      }
-    }
+async function updateNativeBalance() {
+  if (!web3 || !account) {
+    document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
+    return;
+  }
+  try {
+    const balance = await web3.eth.getBalance(account);
+    const balanceMATIC = web3.utils.fromWei(balance, 'ether');
+    document.getElementById('nativeBalance').innerText = `Native Balance: ${parseFloat(balanceMATIC).toFixed(4)} MATIC`;
+  } catch (error) {
+    document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
+    logMessage('Failed to fetch native balance.');
+  }
+}
 
     // Update PnL
-    async function updatePnL() {
-      const now = Date.now();
-      const WAT_OFFSET = 1 * 60 * 60 * 1000; // WAT is UTC+1
-      const midnightWAT = new Date(now - (now % (24 * 60 * 60 * 1000)) - WAT_OFFSET + 24 * 60 * 60 * 1000);
-      if (lastPnLReset < midnightWAT.getTime()) {
-        dailyPnL = 0;
-        lastPnLReset = midnightWAT.getTime();
-      }
-      document.getElementById("pnlStatus").innerText = `PnL: $${dailyPnL.toFixed(2)} (Since 12:00 AM WAT)`;
-    }
+async function updatePnL() {
+  if (!contract || !account) {
+    document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
+    return;
+  }
+  try {
+    // Placeholder for PnL calculation
+    const pnl = await contract.methods.getPnL().call();
+    document.getElementById('pnlStatus').innerText = `PnL: $${parseFloat(pnl).toFixed(2)} (Since 12:00 AM WAT)`;
+  } catch (error) {
+    document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
+    logMessage('Failed to update PnL.');
+  }
+}
 
     // Simulate fetching market data
     async function fetchMarketData(token, timeframe) {
