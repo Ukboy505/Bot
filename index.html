@@ -6,6 +6,7 @@
   <meta name="description" content="Advanced Trading Bot for Polygon Network">
   <title>Trading Bot Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     /* Reset and Global Styles */
     * {
@@ -14,251 +15,389 @@
       box-sizing: border-box;
     }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #1a1a1a;
-      color: #e0e0e0;
-      line-height: 1.5;
-      font-size: 16px;
-    }
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+  line-height: 1.5;
+  font-size: 16px;
+}
 
-    .container {
-      display: flex;
-      min-height: 100vh;
-    }
+.container {
+  display: flex;
+  min-height: 100vh;
+}
 
-    /* Sidebar */
-    .sidebar {
-      width: 280px;
-      background-color: #222222;
-      padding: 20px;
-      transition: transform 0.3s ease;
-      border-right: 1px solid #333;
-    }
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background-color: #222222;
+  padding: 20px;
+  transition: transform 0.3s ease;
+  border-right: 1px solid #333;
+}
 
-    .sidebar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-    .sidebar-header h1 {
-      font-size: 24px;
-      font-weight: 600;
-    }
+.sidebar-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
 
-    .sidebar-toggle {
-      background: none;
-      border: none;
-      color: #e0e0e0;
-      font-size: 24px;
-      cursor: pointer;
-    }
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 24px;
+  cursor: pointer;
+}
 
-    .main-toggle {
-      background: none;
-      border: none;
-      color: #e0e0e0;
-      font-size: 24px;
-      cursor: pointer;
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1001;
-      display: none;
-    }
+.main-toggle {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 24px;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px; /* Position on the right side */
+  z-index: 1001;
+  display: none; /* Hidden by default */
+}
 
-    .wallet-section, .contract-status, .timeframe-section {
-      margin-bottom: 20px;
-    }
+.sidebar:not(.hidden) + .main-content .main-toggle {
+  display: none; /* Hidden when sidebar is visible */
+}
 
-    .wallet-section p, .contract-status p, .timeframe-section p {
-      font-size: 14px;
-      margin-top: 10px;
-    }
+.sidebar.hidden + .main-content .main-toggle {
+  display: block; /* Visible when sidebar is hidden */
+}
 
-    .contract-status .btn {
-      margin-top: 10px;
-    }
+.wallet-section, .contract-status, .timeframe-section {
+  margin-bottom: 20px;
+}
 
-    .timeframe-section select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 4px;
-      background: #333;
-      color: #e0e0e0;
-      border: 1px solid #444;
-    }
+.wallet-section p, .contract-status p, .timeframe-section p {
+  font-size: 14px;
+  margin-top: 10px;
+}
 
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      position: relative;
-    }
+.contract-status .btn {
+  margin-top: 10px;
+}
 
-    .dashboard-header {
-      margin-bottom: 20px;
-    }
+.timeframe-section select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  background: #333;
+  color: #e0e0e0;
+  border: 1px solid #444;
+}
 
-    .dashboard-header h2 {
-      font-size: 28px;
-      font-weight: 600;
-    }
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  position: relative;
+}
 
-    .dashboard-header p {
-      font-size: 14px;
-      color: #a0a0a0;
-    }
+.sidebar.hidden + .main-content {
+  padding-top: 40px; /* Space for main-toggle when sidebar is hidden */
+}
 
-    /* Card */
-    .card {
-      background: #252525;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
+.dashboard-header {
+  margin-bottom: 20px;
+}
 
-    .card h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 15px;
-    }
+.dashboard-header h2 {
+  font-size: 28px;
+  font-weight: 600;
+}
 
-    /* Form Grid */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-    }
+.dashboard-header p {
+  font-size: 14px;
+  color: #a0a0a0;
+}
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
+/* Card */
+.card {
+  background: #252525;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
 
-    .form-group label {
-      font-size: 14px;
-      margin-bottom: 5px;
-      color: #a0a0a0;
-    }
+.card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
 
-    .form-group input, .form-group select {
-      padding: 10px;
-      border-radius: 4px;
-      border: 1px solid #444;
-      background: #333;
-      color: #e0e0e0;
-      font-size: 14px;
-      transition: border-color 0.2s;
-    }
+/* Form Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
 
-    .form-group input:focus, .form-group select:focus {
-      outline: none;
-      border-color: #007bff;
-    }
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
 
-    .form-group p {
-      font-size: 12px;
-      color: #a0a0a0;
-      margin-top: 5px;
-    }
+.form-group label {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #a0a0a0;
+}
 
-    /* Buttons */
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-    }
+.form-group input, .form-group select {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #333;
+  color: #e0e0e0;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
 
-    .btn-primary {
-      background-color: #007bff;
-      color: #fff;
-    }
+.form-group input:focus, .form-group select:focus {
+  outline: none;
+  border-color: #007bff;
+}
 
-    .btn-primary:hover {
-      background-color: #0056b3;
-    }
+.form-group p {
+  font-size: 12px;
+  color: #a0a0a0;
+  margin-top: 5px;
+}
 
-    .btn-secondary {
-      background-color: #444;
-      color: #e0e0e0;
-    }
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
 
-    .btn-secondary:hover {
-      background-color: #555;
-    }
+.btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
 
-    /* Chart Section */
-    .chart-section {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-top: 20px;
-    }
+.btn-primary:hover {
+  background-color: #0056b3;
+}
 
-    .chart-container {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-    }
+.btn-secondary {
+  background-color: #444;
+  color: #e0e0e0;
+}
 
-    .chart-container > div {
-      flex: 1;
-    }
+.btn-secondary:hover {
+  background-color: #555;
+}
 
-    iframe {
-      width: 100%;
-      height: 500px;
-      border: none;
-    }
+.btn-buy {
+  background-color: #28a745;
+  color: #fff;
+}
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-      }
+.btn-buy:hover {
+  background-color: #218838;
+}
 
-      .sidebar {
-        width: 100%;
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1000;
-        height: 100%;
-        transform: translateX(0);
-        transition: transform 0.3s ease;
-      }
+.btn-sell {
+  background-color: #dc3545;
+  color: #fff;
+}
 
-      .sidebar.hidden {
-        transform: translateX(-100%);
-      }
+.btn-sell:hover {
+  background-color: #c82333;
+}
 
-      .main-content {
-        padding: 10px;
-        margin-top: 0;
-        overflow: auto;
-      }
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
 
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
+.btn-danger:hover {
+  background-color: #c82333;
+}
 
-      .chart-container {
-        flex-direction: column;
-      }
-    }
+.btn-success {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-toggle {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.btn-toggle:hover {
+  background-color: #e0a800;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-buttons p {
+  font-size: 14px;
+  color: #a0a0a0;
+  margin-left: 10px;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  background: #333;
+  color: #e0e0e0;
+  font-weight: 600;
+}
+
+td {
+  border-bottom: 1px solid #444;
+}
+
+tr:hover {
+  background: #2a2a2a;
+}
+
+/* Log Area */
+.log-area {
+  max-height: 300px;
+  overflow-y: auto;
+  background: #333;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #a0a0a0;
+}
+
+.log-area a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.log-area a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    height: 100%;
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.hidden {
+    transform: translateX(-100%);
+  }
+
+  .main-content {
+    padding: 10px;
+    margin-top: 0; /* Remove margin-top to ensure content is accessible */
+    overflow: auto;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h2 {
+    font-size: 24px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  th, td {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+
+/* Accessibility */
+:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+[aria-live="polite"] {
+  overflow-anchor: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #333;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Sidebar -->
+    <!-- Sidebar (Visible on Load) -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h1>Trading Bot</h1>
@@ -272,10 +411,10 @@
         <p id="pnlStatus">PnL: $0.00 (Since 12:00 AM WAT)</p>
       </div>
       <div class="contract-status">
-        <p id="contractStatus">Contract Status: Active</p>
-        <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()">Pause Contract</button>
-        <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
-      </div>
+  <p id="contractStatus">Contract Status: Not Connected</p>
+  <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()" style="display: none;">Pause Contract</button>
+  <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
+</div>
       <div class="timeframe-section">
         <label for="timeframe">Timeframe:</label>
         <select id="timeframe" onchange="setTimeframe()">
@@ -290,11 +429,18 @@
     <!-- Main Content -->
     <main class="main-content">
       <button class="main-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
+      <!-- Dashboard Header -->
       <header class="dashboard-header">
         <h2>Dashboard</h2>
-        <p id="currentPair">Current Pair: Not Set</p>
         <p id="priceStatus">Prices: Loading...</p>
       </header>
+
+      <!-- Current Tokens -->
+      <section class="card current-tokens">
+        <h3>Current Tokens</h3>
+        <p id="currentTokenIn">Token In: Not Set</p>
+        <p id="currentTokenOut">Token Out: Not Set</p>
+      </section>
 
       <!-- Token Selection -->
       <section class="card token-selection">
@@ -302,50 +448,193 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="tokenIn">Token In:</label>
-            <select id="tokenIn" onchange="updateTokenDropdowns()"></select>
+            <select id="tokenIn" onchange="updateTokenDropdowns()">
+              <option value="" disabled selected>Select Token</option>
+            </select>
             <input type="text" id="customTokenIn" placeholder="Custom Token Address">
-            <button onclick="addCustomToken('In')">Add Custom</button>
+            <button onclick="addCustomToken('tokenIn')">Add Custom Token</button>
             <p id="tokenInInfo">Balance: 0.0000 | Value: $0.00</p>
           </div>
           <div class="form-group">
             <label for="tokenOut">Token Out:</label>
-            <select id="tokenOut" onchange="updateTokenDropdowns()"></select>
+            <select id="tokenOut" onchange="updateTokenDropdowns()">
+              <option value="" disabled selected>Select Token</option>
+            </select>
             <input type="text" id="customTokenOut" placeholder="Custom Token Address">
-            <button onclick="addCustomToken('Out')">Add Custom</button>
+            <button onclick="addCustomToken('tokenOut')">Add Custom Token</button>
             <p id="tokenOutInfo">Balance: 0.0000 | Value: $0.00</p>
-          </div>
-          <div class="form-group">
-            <label for="priceFeedIn">Price Feed In:</label>
-            <select id="priceFeedIn"></select>
-            <input type="text" id="customPriceFeedIn" placeholder="Custom Price Feed Address">
-            <button onclick="addCustomPriceFeed('In')">Add Custom</button>
-          </div>
-          <div class="form-group">
-            <label for="priceFeedOut">Price Feed Out:</label>
-            <select id="priceFeedOut"></select>
-            <input type="text" id="customPriceFeedOut" placeholder="Custom Price Feed Address">
-            <button onclick="addCustomPriceFeed('Out')">Add Custom</button>
           </div>
         </div>
         <button class="btn btn-secondary" onclick="setTokens()">Set Tokens</button>
+      </section>
+
+      <!-- Price Feed Selection -->
+      <section class="card price-feed-selection">
+        <h3>Price Feeds</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="priceFeedIn">Price Feed In:</label>
+            <select id="priceFeedIn">
+              <option value="" disabled selected>Select Price Feed</option>
+            </select>
+            <input type="text" id="customPriceFeedIn" placeholder="Custom Price Feed Address">
+            <button onclick="addCustomPriceFeed('priceFeedIn')">Add Custom Price Feed</button>
+          </div>
+          <div class="form-group">
+            <label for="priceFeedOut">Price Feed Out:</label>
+            <select id="priceFeedOut">
+              <option value="" disabled selected>Select Price Feed</option>
+            </select>
+            <input type="text" id="customPriceFeedOut" placeholder="Custom Price Feed Address">
+            <button onclick="addCustomPriceFeed('priceFeedOut')">Add Custom Price Feed</button>
+          </div>
+        </div>
         <button class="btn btn-secondary" onclick="setPriceFeeds()">Set Price Feeds</button>
       </section>
 
-      <!-- Market Charts -->
-      <section class="card chart-section" id="marketCharts">
+      <!-- Charts -->
+      <section class="card charts" id="chartsSection" style="display: none;">
         <h3>Market Charts</h3>
-        <div class="chart-container">
-          <div>
-            <h4 id="chartTokenInLabel">Select Token In to view Chart</h4>
-            <div id="chartTokenIn"></div>
-          </div>
-          <div>
-            <h4 id="chartTokenOutLabel">Select Token Out to view Chart</h4>
-            <div id="chartTokenOut"></div>
-          </div>
+        <div id="chartContainer">
+          <iframe id="tokenInChart" width="100%" height="400" frameborder="0"></iframe>
+          <iframe id="tokenOutChart" width="100%" height="400" frameborder="0"></iframe>
         </div>
         <button class="btn btn-secondary" onclick="refreshCharts()">Refresh Charts</button>
         <button class="btn btn-secondary" onclick="toggleCharts()">Hide Charts</button>
+      </section>
+
+      <!-- Trading Parameters -->
+      <section class="card trading-parameters">
+        <h3>Trading Parameters</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="profitRange">Profit Range (%):</label>
+            <input type="number" id="profitRange" value="1" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="stopLoss">Stop Loss (%):</label>
+            <input type="number" id="stopLoss" value="1" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="slippage">Slippage (%):</label>
+            <input type="number" id="slippage" value="1" min="0" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="setTradingParameters()">Set Parameters</button>
+      </section>
+
+      <!-- Technical Parameters -->
+      <section class="card technical-parameters">
+        <h3>Technical Analysis Parameters</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="macdFast">MACD Fast:</label>
+            <input type="number" id="macdFast" value="12" min="1">
+          </div>
+          <div class="form-group">
+            <label for="macdSlow">MACD Slow:</label>
+            <input type="number" id="macdSlow" value="26" min="1">
+          </div>
+          <div class="form-group">
+            <label for="macdSignal">MACD Signal:</label>
+            <input type="number" id="macdSignal" value="9" min="1">
+          </div>
+          <div class="form-group">
+            <label for="rsiPeriod">RSI Period:</label>
+            <input type="number" id="rsiPeriod" value="14" min="1">
+          </div>
+          <div class="form-group">
+            <label for="minRsi">Min RSI:</label>
+            <input type="number" id="minRsi" value="30" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label for="maxRsi">Max RSI:</label>
+            <input type="number" id="maxRsi" value="70" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label for="volumePeriod">Volume Period:</label>
+            <input type="number" id="volumePeriod" value="14" min="1">
+          </div>
+          <div class="form-group">
+            <label for="minVolumeSpike">Min Volume Spike:</label>
+            <input type="number" id="minVolumeSpike" value="1.5" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="maxVolumeSpike">Max Volume Spike:</label>
+            <input type="number" id="maxVolumeSpike" value="3.0" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="emaPeriod">EMA Period:</label>
+            <input type="number" id="emaPeriod" value="20" min="1">
+          </div>
+          <div class="form-group">
+            <label for="bollingerPeriod">Bollinger Period:</label>
+            <input type="number" id="bollingerPeriod" value="20" min="1">
+          </div>
+          <div class="form-group">
+            <label for="bollingerStdDev">Bollinger Std Dev:</label>
+            <input type="number" id="bollingerStdDev" value="2" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label for="minSignals">Minimum Signals:</label>
+            <input type="number" id="minSignals" value="2" min="1" max="7" onchange="setMinSignals()">
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="setTechnicalParameters()">Set Technical Parameters</button>
+      </section>
+
+      <!-- Trading Actions -->
+      <section class="card trading-actions">
+        <h3>Trading Actions</h3>
+        <div class="action-buttons">
+          <div class="form-group">
+            <label for="buyAmount">Buy Amount:</label>
+            <input type="number" id="buyAmount" value="1" min="0" step="0.01">
+          </div>
+          <button class="btn btn-buy" onclick="manualBuy()">Buy</button>
+          <p id="buyResult">Result: None</p>
+          <div class="form-group">
+            <label for="sellAmount">Sell Amount:</label>
+            <input type="number" id="sellAmount" value="1" min="0" step="0.01">
+          </div>
+          <button class="btn btn-sell" onclick="manualSell()">Sell</button>
+          <p id="sellResult">Result: None</p>
+          <button class="btn btn-toggle" onclick="toggleAutoTrading()">Toggle Auto-Trading (Off)</button>
+          <p id="autoTradingStatus">Auto-Trading: Off</p>
+        </div>
+      </section>
+
+      <!-- Signals Table -->
+      <section class="card signals-table">
+        <h3>Market Signals</h3>
+        <table id="tokenSignals">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Signals</th>
+              <th>RSI</th>
+              <th>MACD</th>
+              <th>Indicators & Patterns</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="analysisResult">Market Analysis: Loading...</p>
+      </section>
+
+      <!-- Wallet Balances -->
+      <section class="card wallet-balances">
+        <h3>Wallet Balances</h3>
+        <table id="walletBalances">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Balance</th>
+              <th>USD Value</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </section>
 
       <!-- Funding Actions -->
@@ -353,27 +642,46 @@
         <h3>Funding</h3>
         <div class="form-grid">
           <div class="form-group">
+            <label for="topUpToken">Top-Up Token:</label>
+            <select id="topUpToken"></select>
+            <label for="topUpAmount">Amount:</label>
+            <input type="number" id="topUpAmount" value="0" min="0" step="0.01">
+            <p id="topUpValue">Value: $0.00</p>
+            <button class="btn btn-secondary" onclick="topUpContract()">Top Up</button>
+            <p id="topUpResult">Result: None</p>
+          </div>
+          <div class="form-group">
             <label for="budgetToken">Budget Token:</label>
             <select id="budgetToken"></select>
             <label for="budgetAmount">Amount:</label>
             <input type="number" id="budgetAmount" value="0" min="0" step="0.01">
+            <p id="budgetValue">Value: $0.00</p>
             <button class="btn btn-secondary" onclick="approveBudget()">Approve Budget</button>
             <button class="btn btn-danger" onclick="revokeBudget()">Revoke Budget</button>
             <p id="budgetStatus">Budget: 0 MATIC</p>
           </div>
+          <div class="form-group">
+            <label for="withdrawToken">Withdraw Token:</label>
+            <select id="withdrawToken"></select>
+            <label for="withdrawAmount">Amount:</label>
+            <input type="number" id="withdrawAmount" value="0" min="0" step="0.01">
+            <p id="withdrawValue">Value: $0.00</p>
+            <button class="btn btn-secondary" onclick="withdrawFunds()">Withdraw</button>
+            <p id="withdrawResult">Result: None</p>
+          </div>
         </div>
       </section>
 
-      <!-- Transaction Log Table -->
+      <!-- Log Area -->
       <section class="card log-area">
         <h3>Transaction Logs</h3>
-        <table id="transactionLog">
+        <table id="logTable">
           <thead>
             <tr>
               <th>Timestamp</th>
               <th>Event</th>
               <th>Details</th>
-              <th>Transaction Hash</th>
+              <th>Tx Hash</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -387,783 +695,803 @@
     const QUICKSWAP_ROUTER = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
     const NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
     const POLYGONSCAN_URL = 'https://polygonscan.com/tx/';
-    const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
 
-    // Predefined tokens with symbols
+    // Public RPC for fetching token details without wallet connection
+    const PUBLIC_RPC_URL = 'https://polygon-rpc.com';
+    const publicWeb3 = new Web3(new Web3.providers.HttpProvider(PUBLIC_RPC_URL));
+
+    // Predefined tokens with price feeds
     const TOKENS = [
-      { name: 'USDT', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6, coingeckoId: 'tether', symbol: 'USDT' },
-      { name: 'USDC', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6, coingeckoId: 'usd-coin', symbol: 'USDC' },
-      { name: 'DAI', address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063', decimals: 18, coingeckoId: 'dai', symbol: 'DAI' },
-      { name: 'POL', address: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', decimals: 18, coingeckoId: 'matic-network', symbol: 'POL' },
-      { name: 'ADA', address: '0xE6a991fF0bf2C1a599c7057b7865b03aC15bF4B2', decimals: 18, coingeckoId: 'cardano', symbol: 'ADA' },
-      { name: 'MKR', address: '0x6f7C932e7684666C9fd1d44527765433e01fF61d', decimals: 18, coingeckoId: 'maker', symbol: 'MKR' },
-      { name: 'WETH', address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', decimals: 18, coingeckoId: 'weth', symbol: 'WETH' },
-      { name: 'WBTC', address: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', decimals: 8, coingeckoId: 'wrapped-bitcoin', symbol: 'WBTC' }
+      { name: 'USDT', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6, coingeckoId: 'tether', priceFeed: '0x0A6513e40db6EB1b165753AD52E80663aeA50545' },
+      { name: 'USDC', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6, coingeckoId: 'usd-coin', priceFeed: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7' },
+      { name: 'DAI', address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063', decimals: 18, coingeckoId: 'dai', priceFeed: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D' },
+      { name: 'POL', address: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', decimals: 18, coingeckoId: 'matic-network', priceFeed: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0' },
+      { name: 'ADA', address: '0xE6a991fF0bf2C1a599c7057b7865b03aC15bF4B2', decimals: 18, coingeckoId: 'cardano', priceFeed: '0x882554df528115a743c4537828DA8D5B58e52544' },
+      { name: 'MKR', address: '0x6f7C932e7684666C9fd1d44527765433e01fF61d', decimals: 18, coingeckoId: 'maker', priceFeed: '0xa070427bF5bA5709f70e98b94Cb2F435a242C46C' },
+      { name: 'WETH', address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', decimals: 18, coingeckoId: 'weth', priceFeed: '0xF9680D99D6C9589e2a93a78A04A279e509205945' },
+      { name: 'WBTC', address: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', decimals: 8, coingeckoId: 'wrapped-bitcoin', priceFeed: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6' }
     ];
 
     // Predefined price feeds
-    const PRICE_FEEDS = [
-      { name: 'USDT / USD', address: '0x0A6513e40db6EB1b165753AD52E80663aeA50545', asset: 'Tether USD' },
-      { name: 'USDC / USD', address: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7', asset: 'Circle USD' },
-      { name: 'DAI / USD', address: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D', asset: 'DAI' },
-      { name: 'MATIC / USD', address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0', asset: 'Polygon' },
-      { name: 'ADA / USD', address: '0x882554df528115a743c4537828DA8D5B58e52544', asset: 'Cardano' },
-      { name: 'MKR / USD', address: '0xa070427bF5bA5709f70e98b94Cb2F435a242C46C', asset: 'Maker' },
-      { name: 'ETH / USD', address: '0xF9680D99D6C9589e2a93a78A04A279e509205945', asset: 'Ethereum' },
-      { name: 'WBTC / USD', address: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6', asset: 'Wrapped Bitcoin' }
+    let priceFeedsList = [
+      { name: 'USDT / USD', address: '0x0A6513e40db6EB1b165753AD52E80663aeA50545' },
+      { name: 'USDC / USD', address: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7' },
+      { name: 'DAI / USD', address: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D' },
+      { name: 'MATIC / USD', address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0' },
+      { name: 'ADA / USD', address: '0x882554df528115a743c4537828DA8D5B58e52544' },
+      { name: 'MKR / USD', address: '0xa070427bF5bA5709f70e98b94Cb2F435a242C46C' },
+      { name: 'ETH / USD', address: '0xF9680D99D6C9589e2a93a78A04A279e509205945' },
+      { name: 'WBTC / USD', address: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6' }
     ];
 
     // Global state
-    let web3 = new Web3('https://polygon-rpc.com/');
-    let account, contract;
-    let tokenIn, tokenOut, priceFeedIn, priceFeedOut, tokenInDecimals, tokenOutDecimals;
+    let web3, account, contract;
     let autoTradingActive = false;
     let autoTradingInterval;
+    let tokenIn, tokenOut, priceFeedIn, priceFeedOut, tokenInDecimals, tokenOutDecimals;
+    let timeframe = '5m';
+    let tradingParams = { profitRange: 1, stopLoss: 1, slippage: 1 };
+    let techParams = {
+      macdFast: 12,
+      macdSlow: 26,
+      macdSignal: 9,
+      rsiPeriod: 14,
+      minRsi: 30,
+      maxRsi: 70,
+      volumePeriod: 14,
+      minVolumeSpike: 1.5,
+      maxVolumeSpike: 3.0,
+      emaPeriod: 20,
+      bollingerPeriod: 20,
+      bollingerStdDev: 2,
+      minSignals: 2
+    };
     let dailyPnL = 0;
     let lastPnLReset = 0;
 
-    // Contract ABI
+    // TradingBot ABI (unchanged)
     const CONTRACT_ABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_router",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_wrappedNative",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "OwnableInvalidOwner",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "OwnableUnauthorizedAccount",
-		"type": "error"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "enabled",
-				"type": "bool"
-			}
-		],
-		"name": "AutoTradingToggled",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "BudgetApproved",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "BudgetRevoked",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "Paused",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "priceFeedIn",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "priceFeedOut",
-				"type": "address"
-			}
-		],
-		"name": "PriceFeedsUpdated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "tokenIn",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "tokenOut",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amountOut",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "int256",
-				"name": "usdProfit",
-				"type": "int256"
-			}
-		],
-		"name": "Swapped",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "tokenIn",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "tokenOut",
-				"type": "address"
-			}
-		],
-		"name": "TokensUpdated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "ToppedUp",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "Unpaused",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "Withdrawn",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approveNativeBudget",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approveTokenBudget",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountOutMin",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "minUSDValueOut",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			}
-		],
-		"name": "autoNativeSwap",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountOutMin",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "minUSDValueOut",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			}
-		],
-		"name": "autoTokenSwap",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "autoTradeBudget",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "autoTradingEnabled",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getBalance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "nativeBalance",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			}
-		],
-		"name": "getExpectedOutput",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "priceFeed",
-				"type": "address"
-			}
-		],
-		"name": "getUSDPrice",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "priceFeed",
-				"type": "address"
-			}
-		],
-		"name": "getUSDValue",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountOutMin",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "minUSDValueOut",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			}
-		],
-		"name": "manualNativeSwap",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountOutMin",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "minUSDValueOut",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			}
-		],
-		"name": "manualTokenSwap",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "pause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "paused",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "priceFeedIn",
-		"outputs": [
-			{
-				"internalType": "contract AggregatorV3Interface",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "priceFeedOut",
-		"outputs": [
-			{
-				"internalType": "contract AggregatorV3Interface",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "revokeBudget",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "router",
-		"outputs": [
-			{
-				"internalType": "contract IUniswapV2Router",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_priceFeedIn",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_priceFeedOut",
-				"type": "address"
-			}
-		],
-		"name": "setPriceFeeds",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_tokenIn",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_tokenOut",
-				"type": "address"
-			}
-		],
-		"name": "setTokens",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bool",
-				"name": "enable",
-				"type": "bool"
-			}
-		],
-		"name": "toggleAutoTrading",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "tokenIn",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "tokenOut",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "topUpNative",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "topUpToken",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "unpause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "withdraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "wrappedNative",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	}
-];
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_router",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_wrappedNative",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnableInvalidOwner",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "OwnableUnauthorizedAccount",
+        "type": "error"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "bool",
+            "name": "enabled",
+            "type": "bool"
+          }
+        ],
+        "name": "AutoTradingToggled",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "BudgetApproved",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          }
+        ],
+        "name": "BudgetRevoked",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "previousOwner",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "Paused",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "priceFeedIn",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "priceFeedOut",
+            "type": "address"
+          }
+        ],
+        "name": "PriceFeedsUpdated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amountOut",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "int256",
+            "name": "usdProfit",
+            "type": "int256"
+          }
+        ],
+        "name": "Swapped",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          }
+        ],
+        "name": "TokensUpdated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "ToppedUp",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "Unpaused",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "Withdrawn",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approveNativeBudget",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approveTokenBudget",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "autoNativeSwap",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "autoTokenSwap",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "name": "autoTradeBudget",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "autoTradingEnabled",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getBalance",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "nativeBalance",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          }
+        ],
+        "name": "getExpectedOutput",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "priceFeed",
+            "type": "address"
+          }
+        ],
+        "name": "getUSDPrice",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "priceFeed",
+            "type": "address"
+          }
+        ],
+        "name": "getUSDValue",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "manualNativeSwap",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "manualTokenSwap",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "pause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "paused",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "priceFeedIn",
+        "outputs": [
+          {
+            "internalType": "contract AggregatorV3Interface",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "priceFeedOut",
+        "outputs": [
+          {
+            "internalType": "contract AggregatorV3Interface",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          }
+        ],
+        "name": "revokeBudget",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "router",
+        "outputs": [
+          {
+            "internalType": "contract IUniswapV2Router",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_priceFeedIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_priceFeedOut",
+            "type": "address"
+          }
+        ],
+        "name": "setPriceFeeds",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_tokenOut",
+            "type": "address"
+          }
+        ],
+        "name": "setTokens",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bool",
+            "name": "enable",
+            "type": "bool"
+          }
+        ],
+        "name": "toggleAutoTrading",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "tokenIn",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "tokenOut",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "topUpNative",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "topUpToken",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "unpause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "withdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "wrappedNative",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "stateMutability": "payable",
+        "type": "receive"
+      }
+    ];
 
+    // Updated ERC20 ABI to include symbol
     const ERC20_ABI = [
       "function balanceOf(address) view returns (uint256)",
       "function approve(address spender, uint256 amount) external returns (bool)",
@@ -1172,262 +1500,510 @@
       "function symbol() view returns (string)"
     ];
 
-    // Utility Functions
-    async function getTokenDecimals(tokenAddress) {
-      if (tokenAddress === NATIVE_ADDRESS) return 18;
-      try {
-        const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
-        const decimals = await tokenContract.methods.decimals().call();
-        return Number(decimals);
-      } catch (error) {
-        logMessage(`Failed to fetch decimals for ${tokenAddress}: ${error.message}`);
-        return 0;
+    // Address validation regex
+    const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
+
+    // Initialize dropdowns on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      initializeDropdowns();
+      if (window.ethereum) {
+        window.ethereum.on('accountsChanged', () => location.reload());
+        window.ethereum.on('chainChanged', () => location.reload());
       }
-    }
+    });
 
-    async function getTokenSymbol(tokenAddress) {
-      if (tokenAddress === NATIVE_ADDRESS) return 'MATIC';
-      const token = TOKENS.find(t => t.address === tokenAddress);
-      if (token) return token.symbol;
-      try {
-        const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
-        return await tokenContract.methods.symbol().call();
-      } catch (error) {
-        return 'Unknown';
-      }
-    }
-
-    async function getBlockTimestamp(blockNumber) {
-      const block = await web3.eth.getBlock(blockNumber);
-      return new Date(block.timestamp * 1000).toLocaleString();
-    }
-
-    function handleError(error, action) {
-      let message = 'An error occurred';
-      if (error.message.includes('reverted')) message = 'Transaction failed. Please check your inputs.';
-      else if (error.message.includes('denied')) message = 'Transaction denied by user.';
-      else if (error.message.includes('insufficient')) message = 'Insufficient funds.';
-      else message = error.message;
-      logMessage(`${action} failed: ${message}`);
-    }
-
-    // Initialization
-    function initializeTokenDropdowns() {
-      const selects = ['tokenIn', 'tokenOut', 'budgetToken'];
-      selects.forEach(id => {
-        const select = document.getElementById(id);
+    // Initialize all dropdowns
+    function initializeDropdowns() {
+      const tokenSelects = ['tokenIn', 'tokenOut', 'budgetToken', 'topUpToken', 'withdrawToken'];
+      tokenSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
         select.innerHTML = '<option value="" disabled selected>Select Token</option>';
         TOKENS.forEach(token => {
-          select.insertAdjacentHTML('beforeend', `<option value="${token.address}">${token.symbol}</option>`);
+          const option = document.createElement('option');
+          option.value = token.address;
+          option.text = token.name;
+          select.add(option);
         });
-        select.insertAdjacentHTML('beforeend', `<option value="${NATIVE_ADDRESS}">MATIC</option>`);
+        const nativeOption = document.createElement('option');
+        nativeOption.value = NATIVE_ADDRESS;
+        nativeOption.text = 'MATIC';
+        select.add(nativeOption);
       });
-    }
 
-    function initializePriceFeedDropdowns() {
-      const selects = ['priceFeedIn', 'priceFeedOut'];
-      selects.forEach(id => {
-        const select = document.getElementById(id);
+      const priceFeedSelects = ['priceFeedIn', 'priceFeedOut'];
+      priceFeedSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
         select.innerHTML = '<option value="" disabled selected>Select Price Feed</option>';
-        PRICE_FEEDS.forEach(feed => {
-          select.insertAdjacentHTML('beforeend', `<option value="${feed.address}">${feed.name}</option>`);
+        priceFeedsList.forEach(feed => {
+          const option = document.createElement('option');
+          option.value = feed.address;
+          option.text = feed.name;
+          select.add(option);
         });
       });
     }
 
+    // Add custom token
     async function addCustomToken(type) {
-      const inputId = `customToken${type}`;
-      const address = document.getElementById(inputId).value;
+      const inputId = type === 'tokenIn' ? 'customTokenIn' : 'customTokenOut';
+      const address = document.getElementById(inputId).value.trim();
       if (!ADDRESS_REGEX.test(address)) {
-        logMessage("Invalid token address");
+        logMessage('Invalid token address format');
         return;
       }
-      const decimals = await getTokenDecimals(address);
-      const symbol = await getTokenSymbol(address);
-      TOKENS.push({ name: symbol, address, decimals, coingeckoId: '', symbol });
-      const selectId = `token${type}`;
-      const select = document.getElementById(selectId);
-      select.insertAdjacentHTML('beforeend', `<option value="${address}">${symbol}</option>`);
-      select.value = address;
-      document.getElementById(inputId).value = '';
-      updateTokenDropdowns();
-      ['budgetToken'].forEach(id => {
-        document.getElementById(id).insertAdjacentHTML('beforeend', `<option value="${address}">${symbol}</option>`);
-      });
-      logMessage(`Added custom token: ${symbol} (${address})`);
+      try {
+        const tokenContract = new publicWeb3.eth.Contract(ERC20_ABI, address);
+        const decimals = await tokenContract.methods.decimals().call();
+        const symbol = await tokenContract.methods.symbol().call();
+        const newToken = { name: symbol, address, decimals: Number(decimals), coingeckoId: null, priceFeed: null };
+        TOKENS.push(newToken);
+        updateTokenDropdowns();
+        document.getElementById(inputId).value = '';
+        logMessage(`Added custom token: ${symbol} (${address})`);
+      } catch (error) {
+        logMessage('Failed to add custom token. Please check the address.');
+      }
     }
 
+    // Add custom price feed
     async function addCustomPriceFeed(type) {
-      const inputId = `customPriceFeed${type}`;
-      const address = document.getElementById(inputId).value;
+      const inputId = type === 'priceFeedIn' ? 'customPriceFeedIn' : 'customPriceFeedOut';
+      const address = document.getElementById(inputId).value.trim();
       if (!ADDRESS_REGEX.test(address)) {
-        logMessage("Invalid price feed address");
+        logMessage('Invalid price feed address format');
         return;
       }
-      const name = 'Custom Feed';
-      PRICE_FEEDS.push({ name, address, asset: name });
-      const selectId = `priceFeed${type}`;
-      const select = document.getElementById(selectId);
-      select.insertAdjacentHTML('beforeend', `<option value="${address}">${name}</option>`);
-      select.value = address;
+      const newFeed = { name: `Custom Feed (${address.slice(0, 6)}...)`, address };
+      priceFeedsList.push(newFeed);
+      updatePriceFeedDropdowns();
       document.getElementById(inputId).value = '';
       logMessage(`Added custom price feed: ${address}`);
     }
 
-    // Wallet Connection
+    // Update token dropdowns
+    function updateTokenDropdowns() {
+      const tokenSelects = ['tokenIn', 'tokenOut', 'budgetToken', 'topUpToken', 'withdrawToken'];
+      tokenSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+        TOKENS.forEach(token => {
+          const option = document.createElement('option');
+          option.value = token.address;
+          option.text = token.name;
+          select.add(option);
+        });
+        const nativeOption = document.createElement('option');
+        nativeOption.value = NATIVE_ADDRESS;
+        nativeOption.text = 'MATIC';
+        select.add(nativeOption);
+      });
+      if (contract) {
+        updateTokenInfo();
+      }
+    }
+
+    // Update price feed dropdowns
+    function updatePriceFeedDropdowns() {
+      const priceFeedSelects = ['priceFeedIn', 'priceFeedOut'];
+      priceFeedSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+        priceFeedsList.forEach(feed => {
+          const option = document.createElement('option');
+          option.value = feed.address;
+          option.text = feed.name;
+          select.add(option);
+        });
+      });
+    }
+
+    // Fetch token decimals
+    async function getTokenDecimals(tokenAddress, usePublic = false) {
+      if (tokenAddress === NATIVE_ADDRESS) return 18;
+      try {
+        const web3Instance = usePublic ? publicWeb3 : web3;
+        if (!web3Instance) throw new Error('Web3 not initialized');
+        const tokenContract = new web3Instance.eth.Contract(ERC20_ABI, tokenAddress);
+        const decimals = await tokenContract.methods.decimals().call();
+        return Number(decimals);
+      } catch (error) {
+        logMessage(`Failed to fetch decimals for ${tokenAddress}. Assuming 0 decimals.`);
+        return 0; // Allow non-standard tokens
+      }
+    }
+
+    // Update token info (balance and value)
+    async function updateTokenInfo() {
+      if (!contract) return;
+      const tokenInValue = document.getElementById("tokenIn").value;
+      const tokenOutValue = document.getElementById("tokenOut").value;
+
+      if (tokenInValue) {
+        const token = TOKENS.find(t => t.address === tokenInValue) || { name: 'MATIC', decimals: 18, coingeckoId: 'matic-network' };
+        tokenInDecimals = await getTokenDecimals(tokenInValue);
+        const balance = await getContractBalance(tokenInValue);
+        const usdValue = await getCoinGeckoPrice(token.coingeckoId) * balance;
+        document.getElementById("tokenInInfo").innerText = `Balance: ${balance.toFixed(4)} | Value: $${usdValue.toFixed(2)}`;
+        if (balance === 0) logMessage(`${token.name} has no balance in contract`);
+      }
+      if (tokenOutValue) {
+        const token = TOKENS.find(t => t.address === tokenOutValue) || { name: 'MATIC', decimals: 18, coingeckoId: 'matic-network' };
+        tokenOutDecimals = await getTokenDecimals(tokenOutValue);
+        const balance = await getContractBalance(tokenOutValue);
+        const usdValue = await getCoinGeckoPrice(token.coingeckoId) * balance;
+        document.getElementById("tokenOutInfo").innerText = `Balance: ${balance.toFixed(4)} | Value: $${usdValue.toFixed(2)}`;
+        if (balance === 0) logMessage(`${token.name} has no balance in contract`);
+      }
+    }
+
+    // Update current tokens display
+    async function updateCurrentTokens() {
+      if (!contract) return;
+      try {
+        const tokenInAddr = await contract.methods.tokenIn().call();
+        const tokenOutAddr = await contract.methods.tokenOut().call();
+        let tokenInSymbol = 'Not Set';
+        let tokenOutSymbol = 'Not Set';
+
+        if (tokenInAddr !== NATIVE_ADDRESS && ADDRESS_REGEX.test(tokenInAddr)) {
+          const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenInAddr);
+          tokenInSymbol = await tokenContract.methods.symbol().call();
+        } else if (tokenInAddr === NATIVE_ADDRESS) {
+          tokenInSymbol = 'MATIC';
+        }
+        if (tokenOutAddr !== NATIVE_ADDRESS && ADDRESS_REGEX.test(tokenOutAddr)) {
+          const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenOutAddr);
+          tokenOutSymbol = await tokenContract.methods.symbol().call();
+        } else if (tokenOutAddr === NATIVE_ADDRESS) {
+          tokenOutSymbol = 'MATIC';
+        }
+
+        document.getElementById("currentTokenIn").innerText = `Token In: ${tokenInSymbol} (${tokenInAddr})`;
+        document.getElementById("currentTokenOut").innerText = `Token Out: ${tokenOutSymbol} (${tokenOutAddr})`;
+      } catch (error) {
+        logMessage('Failed to fetch current tokens. Please check contract connection.');
+      }
+    }
+
+    // Set tokens independently
+    async function setTokens() {
+      if (!contract) {
+        logMessage('Please connect wallet first');
+        return;
+      }
+      const tokenInVal = document.getElementById("tokenIn").value;
+      const tokenOutVal = document.getElementById("tokenOut").value;
+
+      if (!tokenInVal || !tokenOutVal) {
+        logMessage('Please select both Token In and Token Out');
+        return;
+      }
+      if (tokenInVal === tokenOutVal) {
+        logMessage('Token In and Token Out cannot be the same');
+        return;
+      }
+      if (!ADDRESS_REGEX.test(tokenInVal) || !ADDRESS_REGEX.test(tokenOutVal)) {
+        logMessage('Invalid token address format');
+        return;
+      }
+
+      try {
+        tokenIn = tokenInVal;
+        tokenOut = tokenOutVal;
+        tokenInDecimals = await getTokenDecimals(tokenIn);
+        tokenOutDecimals = await getTokenDecimals(tokenOut);
+        const tx = await contract.methods.setTokens(tokenIn, tokenOut).send({ from: account });
+        logMessage(`Tokens set successfully - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        await updateCurrentTokens();
+        updateCharts();
+        updatePrices();
+        updateTransactionLog();
+      } catch (error) {
+        logMessage('Failed to set tokens. Please try again.');
+      }
+    }
+
+    // Set price feeds independently
+    async function setPriceFeeds() {
+      if (!contract) {
+        logMessage('Please connect wallet first');
+        return;
+      }
+      const priceFeedInVal = document.getElementById("priceFeedIn").value;
+      const priceFeedOutVal = document.getElementById("priceFeedOut").value;
+
+      if (!priceFeedInVal || !priceFeedOutVal) {
+        logMessage('Please select both Price Feed In and Price Feed Out');
+        return;
+      }
+      if (!ADDRESS_REGEX.test(priceFeedInVal) || !ADDRESS_REGEX.test(priceFeedOutVal)) {
+        logMessage('Invalid price feed address format');
+        return;
+      }
+
+      try {
+        priceFeedIn = priceFeedInVal;
+        priceFeedOut = priceFeedOutVal;
+        const tx = await contract.methods.setPriceFeeds(priceFeedIn, priceFeedOut).send({ from: account });
+        logMessage(`Price feeds set successfully - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        updatePrices();
+        updateTransactionLog();
+      } catch (error) {
+        logMessage('Failed to set price feeds. Please try again.');
+      }
+    }
+
+    // Update charts
+    function updateCharts() {
+      const tokenInId = TOKENS.find(t => t.address === tokenIn)?.coingeckoId;
+      const tokenOutId = TOKENS.find(t => t.address === tokenOut)?.coingeckoId;
+      const tokenInChart = document.getElementById("tokenInChart");
+      const tokenOutChart = document.getElementById("tokenOutChart");
+
+      if (tokenInId) {
+        tokenInChart.src = `https://www.coingecko.com/en/coins/${tokenInId}/usd?embed=true`;
+      } else {
+        tokenInChart.src = '';
+      }
+      if (tokenOutId) {
+        tokenOutChart.src = `https://www.coingecko.com/en/coins/${tokenOutId}/usd?embed=true`;
+      } else {
+        tokenOutChart.src = '';
+      }
+    }
+
+    // Refresh charts
+    function refreshCharts() {
+      const tokenInChart = document.getElementById("tokenInChart");
+      const tokenOutChart = document.getElementById("tokenOutChart");
+      if (tokenInChart.src) tokenInChart.src = tokenInChart.src;
+      if (tokenOutChart.src) tokenOutChart.src = tokenOutChart.src;
+    }
+
+    // Toggle charts visibility
+    function toggleCharts() {
+      const chartsSection = document.getElementById("chartsSection");
+      const toggleButton = document.querySelector("#chartsSection button[onclick='toggleCharts()']");
+      if (chartsSection.style.display === 'none') {
+        chartsSection.style.display = 'block';
+        toggleButton.innerText = 'Hide Charts';
+      } else {
+        chartsSection.style.display = 'none';
+        toggleButton.innerText = 'Show Charts';
+      }
+    }
+
+    // Connect wallet
     async function connectWallet() {
       if (!window.ethereum) {
         logMessage("MetaMask not detected");
         return;
       }
       try {
+        web3 = new Web3(window.ethereum);
         await window.ethereum.request({ method: 'eth_requestAccounts' });
-        web3.setProvider(window.ethereum);
         account = (await web3.eth.getAccounts())[0];
         contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
         document.getElementById("walletStatus").innerText = `Wallet: ${account}`;
         logMessage(`Connected wallet: ${account}`);
         document.getElementById('connectButton').style.display = 'none';
         document.getElementById('disconnectButton').style.display = 'block';
-        initializeTokenDropdowns();
-        initializePriceFeedDropdowns();
+        updateTokenInfo();
+        updateCurrentTokens();
         updatePrices();
         updateBudgetStatus();
+        updateWalletBalances();
+        updateWithdrawDropdown();
         updateNativeBalance();
         updatePnL();
         updateContractStatus();
-        fetchPastEvents();
-        contract.events.allEvents({}, (error, event) => error ? logMessage(`Event error: ${error.message}`) : processEvent(event));
+        updateTransactionLog();
         setInterval(updatePnL, 10 * 60 * 1000);
         setInterval(updateNativeBalance, 30 * 1000);
       } catch (error) {
-        handleError(error, 'Wallet Connection');
+        logMessage('Failed to connect wallet. Please try again.');
       }
     }
 
+    // Disconnect wallet
     function disconnectWallet() {
       account = null;
       contract = null;
-      web3.setProvider('https://polygon-rpc.com/');
+      web3 = null;
+      tokenIn = null;
+      tokenOut = null;
+      priceFeedIn = null;
+      priceFeedOut = null;
       document.getElementById('walletStatus').innerText = 'Wallet: Not Connected';
       document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
       logMessage('Wallet disconnected');
       document.getElementById('connectButton').style.display = 'block';
       document.getElementById('disconnectButton').style.display = 'none';
+      document.getElementById("currentTokenIn").innerText = 'Token In: Not Set';
+      document.getElementById("currentTokenOut").innerText = 'Token Out: Not Set';
+      document.getElementById("tokenInInfo").innerText = 'Balance: 0.0000 | Value: $0.00';
+      document.getElementById("tokenOutInfo").innerText = 'Balance: 0.0000 | Value: $0.00';
     }
 
-    // Contract Interactions
-    async function setTokens() {
-      if (!contract) return logMessage("Please connect wallet first");
+    // Check contract paused state
+    async function isContractPaused() {
+      if (!contract) return false;
       try {
-        const tokenInVal = document.getElementById("tokenIn").value;
-        const tokenOutVal = document.getElementById("tokenOut").value;
-        if (!tokenInVal || !tokenOutVal) {
-          logMessage("Please select both Token In and Token Out");
-          return;
-        }
-        if (!ADDRESS_REGEX.test(tokenInVal) || !ADDRESS_REGEX.test(tokenOutVal)) {
-          throw new Error("Invalid token address");
-        }
-        const tx = await contract.methods.setTokens(tokenInVal, tokenOutVal).send({ from: account });
-        tokenIn = tokenInVal;
-        tokenOut = tokenOutVal;
-        tokenInDecimals = await getTokenDecimals(tokenIn);
-        tokenOutDecimals = await getTokenDecimals(tokenOut);
-        logMessage(`Tokens set: ${await getTokenSymbol(tokenIn)} -> ${await getTokenSymbol(tokenOut)} - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
-        updateTokenDropdowns();
+        return await contract.methods.paused().call();
       } catch (error) {
-        handleError(error, 'Set Tokens');
+        logMessage('Error checking contract status. Please try again.');
+        return false;
       }
     }
 
-    async function setPriceFeeds() {
-      if (!contract) return logMessage("Please connect wallet first");
+// Update contract status UI
+async function updateContractStatus() {
+  if (!contract) {
+    document.getElementById("contractStatus").innerText = "Contract Status: Not Connected";
+    document.getElementById("pauseButton").style.display = "none";
+    document.getElementById("unpauseButton").style.display = "none";
+    return;
+  }
+  try {
+    const isPaused = await isContractPaused();
+    document.getElementById("contractStatus").innerText = `Contract Status: ${isPaused ? 'Paused' : 'Active'}`;
+    document.getElementById("pauseButton").style.display = isPaused ? 'none' : 'block';
+    document.getElementById("unpauseButton").style.display = isPaused ? 'block' : 'none';
+  } catch (error) {
+    document.getElementById("contractStatus").innerText = "Contract Status: Error Fetching Status";
+    document.getElementById("pauseButton").style.display = "none";
+    document.getElementById("unpauseButton").style.display = "none";
+    logMessage('Failed to fetch contract status.');
+  }
+}
+
+    // Pause contract
+    async function pauseContract() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
       try {
-        const priceFeedInVal = document.getElementById("priceFeedIn").value;
-        const priceFeedOutVal = document.getElementById("priceFeedOut").value;
-        if (!priceFeedInVal || !priceFeedOutVal) {
-          logMessage("Please select both Price Feed In and Price Feed Out");
-          return;
-        }
-        if (!ADDRESS_REGEX.test(priceFeedInVal) || !ADDRESS_REGEX.test(priceFeedOutVal)) {
-          throw new Error("Invalid price feed address");
-        }
-        const tx = await contract.methods.setPriceFeeds(priceFeedInVal, priceFeedOutVal).send({ from: account });
-        priceFeedIn = priceFeedInVal;
-        priceFeedOut = priceFeedOutVal;
-        logMessage(`Price feeds set: ${priceFeedIn}, ${priceFeedOut} - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
-        updatePrices();
+        const tx = await contract.methods.pause().send({ from: account });
+        logMessage(`Contract paused - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        await updateContractStatus();
+        updateTransactionLog();
       } catch (error) {
-        handleError(error, 'Set Price Feeds');
+        logMessage('Failed to pause contract. Please try again.');
       }
     }
 
+    // Unpause contract
+    async function unpauseContract() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      try {
+        const tx = await contract.methods.unpause().send({ from: account });
+        logMessage(`Contract unpaused - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        await updateContractStatus();
+        updateTransactionLog();
+      } catch (error) {
+        logMessage('Failed to unpause contract. Please try again.');
+      }
+    }
+
+    // Set timeframe
+    function setTimeframe() {
+      timeframe = document.getElementById("timeframe").value;
+      logMessage(`Timeframe set to ${timeframe}`);
+      updateSignals();
+    }
+
+    // Set trading parameters
+    function setTradingParameters() {
+      const profitRange = parseFloat(document.getElementById("profitRange").value);
+      const stopLoss = parseFloat(document.getElementById("stopLoss").value);
+      const slippage = parseFloat(document.getElementById("slippage").value);
+
+      if (isNaN(profitRange) || profitRange < 0 || isNaN(stopLoss) || stopLoss < 0 || isNaN(slippage) || slippage < 0) {
+        logMessage('Invalid trading parameters. Please enter positive numbers.');
+        return;
+      }
+
+      tradingParams.profitRange = profitRange;
+      tradingParams.stopLoss = stopLoss;
+      tradingParams.slippage = slippage;
+      logMessage(`Trading parameters set - Profit: ${tradingParams.profitRange}%, Stop Loss: ${tradingParams.stopLoss}%, Slippage: ${tradingParams.slippage}%`);
+    }
+
+    // Set technical parameters
+    function setTechnicalParameters() {
+      techParams.macdFast = parseInt(document.getElementById("macdFast").value);
+      techParams.macdSlow = parseInt(document.getElementById("macdSlow").value);
+      techParams.macdSignal = parseInt(document.getElementById("macdSignal").value);
+      techParams.rsiPeriod = parseInt(document.getElementById("rsiPeriod").value);
+      techParams.minRsi = parseInt(document.getElementById("minRsi").value);
+      techParams.maxRsi = parseInt(document.getElementById("maxRsi").value);
+      techParams.volumePeriod = parseInt(document.getElementById("volumePeriod").value);
+      techParams.minVolumeSpike = parseFloat(document.getElementById("minVolumeSpike").value);
+      techParams.maxVolumeSpike = parseFloat(document.getElementById("maxVolumeSpike").value);
+      techParams.emaPeriod = parseInt(document.getElementById("emaPeriod").value);
+      techParams.bollingerPeriod = parseInt(document.getElementById("bollingerPeriod").value);
+      techParams.bollingerStdDev = parseFloat(document.getElementById("bollingerStdDev").value);
+
+      if (Object.values(techParams).some(val => isNaN(val) || val <= 0)) {
+        logMessage('Invalid technical parameters. Please enter positive numbers.');
+        return;
+      }
+
+      logMessage("Technical parameters updated");
+      updateSignals();
+    }
+
+    // Set minimum signals
+    function setMinSignals() {
+      const minSignals = parseInt(document.getElementById("minSignals").value);
+      if (isNaN(minSignals) || minSignals < 1 || minSignals > 7) {
+        logMessage('Minimum signals must be between 1 and 7');
+        return;
+      }
+      techParams.minSignals = minSignals;
+      logMessage(`Minimum signals set to ${techParams.minSignals}`);
+      updateSignals();
+    }
+
+    // Fetch CoinGecko price
+    async function getCoinGeckoPrice(coingeckoId) {
+      if (!coingeckoId) return 0;
+      try {
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`);
+        const data = await response.json();
+        return data[coingeckoId]?.usd || 0;
+      } catch (error) {
+        logMessage('Failed to fetch price from CoinGecko.');
+        return 0;
+      }
+    }
+
+    // Update prices
     async function updatePrices() {
       if (!contract || !tokenIn || !tokenOut || !priceFeedIn || !priceFeedOut) return;
       try {
-        const tokenInSymbol = await getTokenSymbol(tokenIn);
-        const tokenOutSymbol = await getTokenSymbol(tokenOut);
         const amountIn = (1 * (10 ** tokenInDecimals)).toString();
         const amountOut = (1 * (10 ** tokenOutDecimals)).toString();
         const usdValueIn = web3.utils.fromWei(await contract.methods.getUSDValue(amountIn, priceFeedIn).call(), 'ether');
         const usdValueOut = web3.utils.fromWei(await contract.methods.getUSDValue(amountOut, priceFeedOut).call(), 'ether');
-        const priceIn = usdValueIn > 0 ? `$${usdValueIn}` : 'Price not available';
-        const priceOut = usdValueOut > 0 ? `$${usdValueOut}` : 'Price not available';
-        document.getElementById("priceStatus").innerText = `Prices: 1 ${tokenInSymbol} = ${priceIn}, 1 ${tokenOutSymbol} = ${priceOut}`;
+        const tokenInName = TOKENS.find(t => t.address === tokenIn)?.name || 'MATIC';
+        const tokenOutName = TOKENS.find(t => t.address === tokenOut)?.name || 'MATIC';
+        document.getElementById("priceStatus").innerText = `Prices: 1 ${tokenInName} = $${usdValueIn}, 1 ${tokenOutName} = $${usdValueOut}`;
       } catch (error) {
-        document.getElementById("priceStatus").innerText = `Prices: Error fetching prices`;
-        handleError(error, 'Update Prices');
+        document.getElementById("priceStatus").innerText = 'Prices: Error fetching prices';
+        logMessage('Failed to update prices. Ensure tokens and feeds are set.');
       }
     }
 
-    async function updateTokenDropdowns() {
-      if (!account || !contract) return;
-      const tokenInSelect = document.getElementById("tokenIn");
-      const tokenOutSelect = document.getElementById("tokenOut");
-      const tokenInValue = tokenInSelect.value;
-      const tokenOutValue = tokenOutSelect.value;
-
-      Array.from(tokenInSelect.options).forEach(option => {
-        option.disabled = option.value === tokenOutValue && option.value !== "";
-      });
-      Array.from(tokenOutSelect.options).forEach(option => {
-        option.disabled = option.value === tokenInValue && option.value !== "";
-      });
-
-      if (tokenInValue) {
-        const balance = await getContractBalance(tokenInValue);
-        const usdValue = await getCoinGeckoPrice(TOKENS.find(t => t.address === tokenInValue)?.coingeckoId || 'matic-network') * balance;
-        document.getElementById("tokenInInfo").innerText = `Balance: ${balance.toFixed(4)} | Value: $${usdValue.toFixed(2)}`;
-        const symbolIn = await getTokenSymbol(tokenInValue);
-        document.getElementById("chartTokenInLabel").innerText = `Chart for ${symbolIn}`;
-        document.getElementById("chartTokenIn").innerHTML = getChartHtml(tokenInValue);
-      } else {
-        document.getElementById("chartTokenInLabel").innerText = "Select Token In to view Chart";
-        document.getElementById("chartTokenIn").innerHTML = "";
-      }
-
-      if (tokenOutValue) {
-        const balance = await getContractBalance(tokenOutValue);
-        const usdValue = await getCoinGeckoPrice(TOKENS.find(t => t.address === tokenOutValue)?.coingeckoId || 'matic-network') * balance;
-        document.getElementById("tokenOutInfo").innerText = `Balance: ${balance.toFixed(4)} | Value: $${usdValue.toFixed(2)}`;
-        const symbolOut = await getTokenSymbol(tokenOutValue);
-        document.getElementById("chartTokenOutLabel").innerText = `Chart for ${symbolOut}`;
-        document.getElementById("chartTokenOut").innerHTML = getChartHtml(tokenOutValue);
-      } else {
-        document.getElementById("chartTokenOutLabel").innerText = "Select Token Out to view Chart";
-        document.getElementById("chartTokenOut").innerHTML = "";
-     явиї
-
-      if (tokenInValue && tokenOutValue) {
-        const symbolIn = await getTokenSymbol(tokenInValue);
-        const symbolOut = await getTokenSymbol(tokenOutValue);
-        document.getElementById("currentPair").innerText = `Current Pair: ${symbolIn}/${symbolOut}`;
-      } else {
-        document.getElementById("currentPair").innerText = "Current Pair: Not Set";
-      }
-    }
-
+    // Get contract balance
     async function getContractBalance(tokenAddress) {
       if (!contract) return 0;
       try {
@@ -1441,88 +2017,322 @@
           return parseFloat(balance) / (10 ** decimals);
         }
       } catch (error) {
-        handleError(error, 'Get Contract Balance');
+        logMessage('Failed to fetch contract balance.');
         return 0;
       }
     }
 
-    async function fetchPastEvents() {
+    // Update wallet balances
+    async function updateWalletBalances() {
+      if (!account || !web3) return;
+      const tbody = document.getElementById("walletBalances").getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";
+      for (const token of TOKENS.concat([{ name: 'MATIC', address: NATIVE_ADDRESS, decimals: 18, coingeckoId: 'matic-network' }])) {
+        const decimals = await getTokenDecimals(token.address);
+        let balance;
+        if (token.address === NATIVE_ADDRESS) {
+          balance = await web3.eth.getBalance(account);
+          balance = parseFloat(web3.utils.fromWei(balance, 'ether'));
+        } else {
+          const tokenContract = new web3.eth.Contract(ERC20_ABI, token.address);
+          balance = await tokenContract.methods.balanceOf(account).call();
+          balance = parseFloat(balance) / (10 ** decimals);
+        }
+        const usdValue = await getCoinGeckoPrice(token.coingeckoId) * balance;
+        if (balance > 0) {
+          tbody.insertAdjacentHTML('beforeend', `<tr><td>${token.name}</td><td>${balance.toFixed(4)}</td><td>$${usdValue.toFixed(2)}</td></tr>`);
+        }
+      }
+    }
+
+    // Update withdraw dropdown
+    async function updateWithdrawDropdown() {
       if (!contract) return;
-      const events = await contract.getPastEvents('allEvents', { fromBlock: 0, toBlock: 'latest' });
-      for (const event of events) {
-        await processEvent(event);
+      const withdrawSelect = document.getElementById("withdrawToken");
+      withdrawSelect.innerHTML = '<option value="" disabled selected>Select Token</option>';
+      for (const token of TOKENS.concat([{ name: 'MATIC', address: NATIVE_ADDRESS, decimals: 18, coingeckoId: 'matic-network' }])) {
+        const decimals = await getTokenDecimals(token.address);
+        const balance = await getContractBalance(token.address);
+        const usdValue = await getCoinGeckoPrice(token.coingeckoId) * balance;
+        if (balance > 0 && usdValue > 0) {
+          withdrawSelect.insertAdjacentHTML('beforeend', `<option value="${token.address}">${token.name} (Bal: ${balance.toFixed(4)}, $${usdValue.toFixed(2)})</option>`);
+        }
       }
     }
 
-    async function processEvent(event) {
-      const timestamp = await getBlockTimestamp(event.blockNumber);
-      const eventName = event.event;
-      let details = '';
-      switch (eventName) {
-        case 'Swapped':
-          const tokenInSymbol = await getTokenSymbol(event.returnValues.tokenIn);
-          const tokenOutSymbol = await getTokenSymbol(event.returnValues.tokenOut);
-          const amountIn = web3.utils.fromWei(event.returnValues.amountIn, 'ether');
-          const amountOut = web3.utils.fromWei(event.returnValues.amountOut, 'ether');
-          const profit = web3.utils.fromWei(event.returnValues.usdProfit, 'ether');
-          details = `Swapped ${amountIn} ${tokenInSymbol} for ${amountOut} ${tokenOutSymbol}, profit: $${profit}`;
-          break;
-        case 'ToppedUp':
-          const topUpTokenSymbol = await getTokenSymbol(event.returnValues.token);
-          const topUpAmount = web3.utils.fromWei(event.returnValues.amount, 'ether');
-          details = `Topped up ${topUpAmount} ${topUpTokenSymbol}`;
-          break;
-        default:
-          details = JSON.stringify(event.returnValues);
-      }
-      const txHash = event.transactionHash;
-      const row = `<tr><td>${timestamp}</td><td>${eventName}</td><td>${details}</td><td><a href="${POLYGONSCAN_URL}${txHash}" target="_blank">${txHash}</a></td></tr>`;
-      document.getElementById("transactionLog").getElementsByTagName("tbody")[0].insertAdjacentHTML('afterbegin', row);
-    }
-
-    function getChartHtml(tokenAddress) {
-      if (tokenAddress === NATIVE_ADDRESS) {
-        return `<iframe src="https://www.coingecko.com/en/coins/matic-network/usd#panel" width="100%" height="500" frameborder="0"></iframe>`;
-      }
-      const token = TOKENS.find(t => t.address === tokenAddress);
-      if (!token || !token.coingeckoId) {
-        return '<p>Chart not available for this token.</p>';
-      }
-      const url = `https://www.coingecko.com/en/coins/${token.coingeckoId}/usd#panel`;
-      return `<iframe src="${url}" width="100%" height="500" frameborder="0"></iframe>`;
-    }
-
-    function refreshCharts() {
-      const tokenInValue = document.getElementById("tokenIn").value;
-      const tokenOutValue = document.getElementById("tokenOut").value;
-      document.getElementById("chartTokenIn").innerHTML = getChartHtml(tokenInValue);
-      document.getElementById("chartTokenOut").innerHTML = getChartHtml(tokenOutValue);
-    }
-
-    function toggleCharts() {
-      const charts = document.getElementById("marketCharts");
-      if (charts.style.display === "none") {
-        charts.style.display = "block";
-        document.querySelector("#marketCharts button:nth-of-type(2)").innerText = "Hide Charts";
-      } else {
-        charts.style.display = "none";
-        document.querySelector("#marketCharts button:nth-of-type(2)").innerText = "Show Charts";
-      }
-    }
-
-    async function approveBudget() {
-      if (!contract) return logMessage("Please connect wallet first");
+    // Update native balance
+    async function updateNativeBalance() {
+      if (!contract) return;
       try {
-        const token = document.getElementById("budgetToken").value;
-        if (!token) {
-          logMessage("Please select a budget token");
-          return;
+        const balance = await contract.methods.getBalance().call();
+        const formattedBalance = web3.utils.fromWei(balance, 'ether');
+        document.getElementById("nativeBalance").innerText = `Native Balance: ${parseFloat(formattedBalance).toFixed(4)} MATIC`;
+      } catch (error) {
+        logMessage('Failed to fetch native balance.');
+      }
+    }
+
+    // Update PnL
+    async function updatePnL() {
+      const now = Date.now();
+      const WAT_OFFSET = 1 * 60 * 60 * 1000; // WAT is UTC+1
+      const midnightWAT = new Date(now - (now % (24 * 60 * 60 * 1000)) - WAT_OFFSET + 24 * 60 * 60 * 1000);
+      if (lastPnLReset < midnightWAT.getTime()) {
+        dailyPnL = 0;
+        lastPnLReset = midnightWAT.getTime();
+      }
+      document.getElementById("pnlStatus").innerText = `PnL: $${dailyPnL.toFixed(2)} (Since 12:00 AM WAT)`;
+    }
+
+    // Simulate fetching market data
+    async function fetchMarketData(token, timeframe) {
+      const prices = Array(50).fill().map(() => Math.random() * 100 + 50);
+      const volumes = Array(50).fill().map(() => Math.random() * 1000);
+      return { prices, volumes };
+    }
+
+    // Update market signals
+    async function updateSignals() {
+      if (!tokenIn || !tokenOut || !contract) return;
+      const tbody = document.getElementById("tokenSignals").getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";
+
+      const tokens = [tokenIn, tokenOut].map(addr => TOKENS.find(t => t.address === addr) || { name: 'MATIC', coingeckoId: 'matic-network' });
+      for (const token of tokens) {
+        const { prices, volumes } = await fetchMarketData(token.address, timeframe);
+        const signals = calculateSignals(prices, volumes);
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${token.name}</td>
+            <td>${signals.count}</td>
+            <td>${signals.rsi.toFixed(2)}</td>
+            <td>${signals.macd.signal > 0 ? 'Bullish' : 'Bearish'}</td>
+            <td>${signals.patterns.join(', ')}</td>
+          </tr>
+        `);
+        if (signals.count >= techParams.minSignals && autoTradingActive) {
+          logMessage(`Auto-trading triggered for ${token.name} with ${signals.count} signals`);
+          await autoTrade(signals.count >= techParams.minSignals ? 'buy' : 'sell');
         }
-        const amount = parseFloat(document.getElementById("budgetAmount").value);
-        if (isNaN(amount) || amount <= 0) {
-          logMessage("Please enter a valid amount greater than zero");
-          return;
+      }
+      document.getElementById("analysisResult").innerText = `Market Analysis: Updated for ${timeframe}`;
+    }
+
+    // Calculate technical signals
+    function calculateSignals(prices, volumes) {
+      const rsi = technicalindicators.RSI.calculate({ values: prices, period: techParams.rsiPeriod })[0] || 0;
+      const macdData = technicalindicators.MACD.calculate({
+        values: prices,
+        fastPeriod: techParams.macdFast,
+        slowPeriod: techParams.macdSlow,
+        signalPeriod: techParams.macdSignal
+      });
+      const macd = macdData[macdData.length - 1] || { MACD: 0, signal: 0 };
+      const ema = technicalindicators.EMA.calculate({ values: prices, period: techParams.emaPeriod })[0] || 0;
+      const bollinger = technicalindicators.BollingerBands.calculate({
+        values: prices,
+        period: techParams.bollingerPeriod,
+        stdDev: techParams.bollingerStdDev
+      })[0] || { upper: 0, middle: 0, lower: 0 };
+      const smaVolume = technicalindicators.SMA.calculate({ values: volumes, period: techParams.volumePeriod })[0] || 0;
+      const volumeSpike = volumes[volumes.length - 1] / smaVolume;
+
+      let signals = 0;
+      const patterns = [];
+      if (rsi < techParams.minRsi) { signals++; patterns.push("Oversold RSI"); }
+      if (rsi > techParams.maxRsi) { signals++; patterns.push("Overbought RSI"); }
+      if (macd.MACD > macd.signal) { signals++; patterns.push("MACD Bullish"); }
+      if (macd.MACD < macd.signal) { signals++; patterns.push("MACD Bearish"); }
+      if (prices[prices.length - 1] > ema) { signals++; patterns.push("Above EMA"); }
+      if (prices[prices.length - 1] > bollinger.upper) { signals++; patterns.push("Above Bollinger Upper"); }
+      if (volumeSpike > techParams.minVolumeSpike && volumeSpike < techParams.maxVolumeSpike) { signals++; patterns.push("Volume Spike"); }
+
+      return { count: signals, rsi, macd, patterns };
+    }
+
+    // Manual buy
+    async function manualBuy() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const amount = parseFloat(document.getElementById("buyAmount").value);
+      if (isNaN(amount) || amount <= 0) {
+        logMessage('Please enter a valid buy amount greater than 0');
+        return;
+      }
+      try {
+        const amountIn = (amount * (10 ** tokenInDecimals)).toString();
+        const amountOutMin = (amount * (1 - tradingParams.slippage / 100) * (10 ** tokenOutDecimals)).toString();
+        const minUSDValueOut = web3.utils.toWei("0.9", 'ether');
+        const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+        let tx;
+        if (tokenIn === NATIVE_ADDRESS) {
+          tx = await contract.methods.manualNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account, value: amountIn });
+        } else {
+          tx = await contract.methods.manualTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account });
         }
+        document.getElementById("buyResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
+        logMessage(`Manual buy successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        dailyPnL += 0.1;
+        updatePnL();
+        updateWalletBalances();
+        updateWithdrawDropdown();
+        updateNativeBalance();
+        updateTransactionLog();
+      } catch (error) {
+        document.getElementById("buyResult").innerText = 'Result: Failed';
+        logMessage('Manual buy failed. Please check your inputs.');
+      }
+    }
+
+    // Manual sell
+    async function manualSell() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const amount = parseFloat(document.getElementById("sellAmount").value);
+      if (isNaN(amount) || amount <= 0) {
+        logMessage('Please enter a valid sell amount greater than 0');
+        return;
+      }
+      try {
+        const amountIn = (amount * (10 ** tokenOutDecimals)).toString();
+        const amountOutMin = (amount * (1 - tradingParams.slippage / 100) * (10 ** tokenInDecimals)).toString();
+        const minUSDValueOut = web3.utils.toWei("0.9", 'ether');
+        const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+        const tempTokenIn = tokenIn;
+        tokenIn = tokenOut;
+        tokenOut = tempTokenIn;
+        const tempDecimals = tokenInDecimals;
+        tokenInDecimals = tokenOutDecimals;
+        tokenOutDecimals = tempDecimals;
+
+        let tx;
+        if (tokenIn === NATIVE_ADDRESS) {
+          tx = await contract.methods.manualNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account, value: amountIn });
+        } else {
+          tx = await contract.methods.manualTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account });
+        }
+        document.getElementById("sellResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
+        logMessage(`Manual sell successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        dailyPnL -= 0.05;
+        updatePnL();
+        updateWalletBalances();
+        updateWithdrawDropdown();
+        updateNativeBalance();
+        updateTransactionLog();
+
+        tokenIn = tempTokenIn;
+        tokenOut = tempTokenIn;
+        tokenInDecimals = tempDecimals;
+        tokenOutDecimals = await getTokenDecimals(tokenOut);
+      } catch (error) {
+        document.getElementById("sellResult").innerText = 'Result: Failed';
+        logMessage('Manual sell failed. Please check your inputs.');
+      }
+    }
+
+    // Toggle auto-trading
+    async function toggleAutoTrading() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      try {
+        autoTradingActive = !autoTradingActive;
+        const tx = await contract.methods.toggleAutoTrading(autoTradingActive).send({ from: account });
+        document.getElementById("autoTradingStatus").innerText = `Auto-Trading: ${autoTradingActive ? 'On' : 'Off'}`;
+        document.getElementById("toggleAutoTrading").innerText = `Toggle Auto-Trading (${autoTradingActive ? 'On' : 'Off'})`;
+        logMessage(`Auto-trading ${autoTradingActive ? 'enabled' : 'disabled'} - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        if (autoTradingActive) {
+          autoTradingInterval = setInterval(updateSignals, 60 * 1000);
+        } else {
+          clearInterval(autoTradingInterval);
+        }
+        updateTransactionLog();
+      } catch (error) {
+        logMessage('Failed to toggle auto-trading. Please try again.');
+        autoTradingActive = !autoTradingActive; // Revert on failure
+      }
+    }
+
+    // Auto trade
+    async function autoTrade(direction) {
+      if (!contract) return;
+      try {
+        const amountIn = (1 * (10 ** tokenInDecimals)).toString();
+        const amountOutMin = (1 * (1 - tradingParams.slippage / 100) * (10 ** tokenOutDecimals)).toString();
+        const minUSDValueOut = web3.utils.toWei("0.9", 'ether');
+        const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+        let tx;
+        if (tokenIn === NATIVE_ADDRESS) {
+          tx = await contract.methods.autoNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account });
+        } else {
+          tx = await contract.methods.autoTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account });
+        }
+        logMessage(`Auto ${direction} successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        dailyPnL += direction === 'buy' ? 0.1 : -0.05;
+        updatePnL();
+        updateWalletBalances();
+        updateWithdrawDropdown();
+        updateNativeBalance();
+        updateTransactionLog();
+      } catch (error) {
+        logMessage(`Auto ${direction} failed. Please check contract status.`);
+      }
+    }
+
+    // Top up contract
+    async function topUpContract() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const token = document.getElementById("topUpToken").value;
+      const amount = parseFloat(document.getElementById("topUpAmount").value);
+      if (!token || isNaN(amount) || amount <= 0) {
+        logMessage('Please select a token and enter a valid amount greater than 0');
+        return;
+      }
+      try {
+        const decimals = await getTokenDecimals(token);
+        const amountWei = (amount * (10 ** decimals)).toString();
+        let tx;
+        if (token === NATIVE_ADDRESS) {
+          tx = await contract.methods.topUpNative().send({ from: account, value: amountWei });
+        } else {
+          tx = await contract.methods.topUpToken(token, amountWei).send({ from: account });
+        }
+        document.getElementById("topUpResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
+        logMessage(`Top-up successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        updateTokenInfo();
+        updateWithdrawDropdown();
+        updateNativeBalance();
+        updateTransactionLog();
+      } catch (error) {
+        document.getElementById("topUpResult").innerText = 'Result: Failed';
+        logMessage('Top-up failed. Please check your inputs.');
+      }
+    }
+
+    // Approve budget
+    async function approveBudget() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const token = document.getElementById("budgetToken").value;
+      const amount = parseFloat(document.getElementById("budgetAmount").value);
+      if (!token || isNaN(amount) || amount <= 0) {
+        logMessage('Please select a token and enter a valid amount greater than 0');
+        return;
+      }
+      try {
         const decimals = await getTokenDecimals(token);
         const amountWei = (amount * (10 ** decimals)).toString();
         let tx;
@@ -1534,85 +2344,167 @@
         logMessage(`Budget approved - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
         updateBudgetStatus();
         updateNativeBalance();
+        updateTransactionLog();
       } catch (error) {
-        handleError(error, 'Approve Budget');
+        logMessage('Budget approval failed. Please check your inputs.');
       }
     }
 
+    // Revoke budget
     async function revokeBudget() {
-      if (!contract) return logMessage("Please connect wallet first");
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const token = document.getElementById("budgetToken").value;
+      if (!token) {
+        logMessage('Please select a token to revoke budget');
+        return;
+      }
       try {
-        const token = document.getElementById("budgetToken").value;
-        if (!token) {
-          logMessage("Please select a budget token");
-          return;
-        }
         const tx = await contract.methods.revokeBudget(token).send({ from: account });
         logMessage(`Budget revoked - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
         updateBudgetStatus();
+        updateWithdrawDropdown();
         updateNativeBalance();
+        updateTransactionLog();
       } catch (error) {
-        handleError(error, 'Revoke Budget');
+        logMessage('Budget revocation failed. Please try again.');
       }
     }
 
-    async function getCoinGeckoPrice(coingeckoId) {
-      if (!coingeckoId) return 0;
-      try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoId}&vs_currencies=usd`);
-        const data = await response.json();
-        return data[coingeckoId].usd;
-      } catch (error) {
-        logMessage(`CoinGecko price fetch failed: ${error.message}`);
-        return 0;
-      }
-    }
-
-    // Other functions (unchanged or minimally modified)
-    async function updateNativeBalance() {
+    // Update budget status
+    async function updateBudgetStatus() {
       if (!contract) return;
+      const token = document.getElementById("budgetToken").value;
+      if (!token) return;
       try {
-        const balance = await contract.methods.getBalance().call();
-        document.getElementById("nativeBalance").innerText = `Native Balance: ${parseFloat(web3.utils.fromWei(balance, 'ether')).toFixed(4)} MATIC`;
+        const decimals = await getTokenDecimals(token);
+        const budget = await contract.methods.autoTradeBudget(token).call();
+        const tokenName = TOKENS.find(t => t.address === token)?.name || 'MATIC';
+        document.getElementById("budgetStatus").innerText = `Budget: ${(parseFloat(budget) / (10 ** decimals)).toFixed(4)} ${tokenName}`;
       } catch (error) {
-        handleError(error, 'Update Native Balance');
+        logMessage('Failed to update budget status.');
       }
     }
 
+    // Withdraw funds
+    async function withdrawFunds() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const token = document.getElementById("withdrawToken").value;
+      const amount = parseFloat(document.getElementById("withdrawAmount").value);
+      if (!token || isNaN(amount) || amount <= 0) {
+        logMessage('Please select a token and enter a valid amount greater than 0');
+        return;
+      }
+      try {
+        const decimals = await getTokenDecimals(token);
+        const amountWei = (amount * (10 ** decimals)).toString();
+        const tx = await contract.methods.withdraw(token, amountWei).send({ from: account });
+        document.getElementById("withdrawResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
+        logMessage(`Withdrawal successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
+        updateTokenInfo();
+        updateWithdrawDropdown();
+        updateNativeBalance();
+        updateTransactionLog();
+      } catch (error) {
+        document.getElementById("withdrawResult").innerText = 'Result: Failed';
+        logMessage('Withdrawal failed. Please check your inputs.');
+      }
+    }
+
+    // Update transaction log
+    async function updateTransactionLog() {
+      if (!contract || !account) return;
+      const events = [];
+      const eventTypes = ['Swapped', 'ToppedUp', 'Withdrawn', 'BudgetApproved', 'BudgetRevoked', 'AutoTradingToggled', 'PriceFeedsUpdated', 'TokensUpdated'];
+      try {
+        for (const eventType of eventTypes) {
+          const pastEvents = await contract.getPastEvents(eventType, { fromBlock: 0, toBlock: 'latest', filter: { owner: account } });
+          events.push(...pastEvents);
+        }
+        events.sort((a, b) => b.blockNumber - a.blockNumber || b.transactionIndex - a.transactionIndex);
+
+        const logTableBody = document.getElementById("logTable").getElementsByTagName("tbody")[0];
+        logTableBody.innerHTML = '';
+
+        for (const event of events) {
+          const block = await web3.eth.getBlock(event.blockNumber);
+          const timestamp = new Date(block.timestamp * 1000).toLocaleString();
+          const eventName = event.event;
+          let details = '';
+
+          switch (eventName) {
+            case 'Swapped':
+              const tokenInSym = TOKENS.find(t => t.address === event.returnValues.tokenIn)?.name || 'MATIC';
+              const tokenOutSym = TOKENS.find(t => t.address === event.returnValues.tokenOut)?.name || 'MATIC';
+              const amountIn = (parseFloat(event.returnValues.amountIn) / (10 ** (TOKENS.find(t => t.address === event.returnValues.tokenIn)?.decimals || 18))).toFixed(4);
+              const amountOut = (parseFloat(event.returnValues.amountOut) / (10 ** (TOKENS.find(t => t.address === event.returnValues.tokenOut)?.decimals || 18))).toFixed(4);
+              details = `Swapped ${amountIn} ${tokenInSym} for ${amountOut} ${tokenOutSym}`;
+              break;
+            case 'ToppedUp':
+              const topUpSym = TOKENS.find(t => t.address === event.returnValues.token)?.name || 'MATIC';
+              const topUpAmt = (parseFloat(event.returnValues.amount) / (10 ** (TOKENS.find(t => t.address === event.returnValues.token)?.decimals || 18))).toFixed(4);
+              details = `Topped up ${topUpAmt} ${topUpSym}`;
+              break;
+            case 'Withdrawn':
+              const withdrawSym = TOKENS.find(t => t.address === event.returnValues.token)?.name || 'MATIC';
+              const withdrawAmt = (parseFloat(event.returnValues.amount) / (10 ** (TOKENS.find(t => t.address === event.returnValues.token)?.decimals || 18))).toFixed(4);
+              details = `Withdrew ${withdrawAmt} ${withdrawSym}`;
+              break;
+            case 'BudgetApproved':
+              const budgetSym = TOKENS.find(t => t.address === event.returnValues.token)?.name || 'MATIC';
+              const budgetAmt = (parseFloat(event.returnValues.amount) / (10 ** (TOKENS.find(t => t.address === event.returnValues.token)?.decimals || 18))).toFixed(4);
+              details = `Approved budget of ${budgetAmt} ${budgetSym}`;
+              break;
+            case 'BudgetRevoked':
+              const revokeSym = TOKENS.find(t => t.address === event.returnValues.token)?.name || 'MATIC';
+              details = `Revoked budget for ${revokeSym}`;
+              break;
+            case 'AutoTradingToggled':
+              details = `Auto-trading ${event.returnValues.enabled ? 'enabled' : 'disabled'}`;
+              break;
+            case 'PriceFeedsUpdated':
+              details = `Updated price feeds to ${event.returnValues.priceFeedIn}, ${event.returnValues.priceFeedOut}`;
+              break;
+            case 'TokensUpdated':
+              const tokenInName = TOKENS.find(t => t.address === event.returnValues.tokenIn)?.name || 'MATIC';
+              const tokenOutName = TOKENS.find(t => t.address === event.returnValues.tokenOut)?.name || 'MATIC';
+              details = `Updated tokens to ${tokenInName} -> ${tokenOutName}`;
+              break;
+            default:
+              details = 'Event details not formatted';
+          }
+
+          const txHash = event.transactionHash;
+          const row = `<tr><td>${timestamp}</td><td>${eventName}</td><td>${details}</td><td><a href="${POLYGONSCAN_URL}${txHash}" target="_blank">${txHash.slice(0, 6)}...</a></td></tr>`;
+          logTableBody.insertAdjacentHTML('beforeend', row);
+        }
+      } catch (error) {
+        logMessage('Failed to update transaction log.');
+      }
+    }
+
+    // Log message with local timestamp
     function logMessage(message) {
-      console.log(`${new Date().toLocaleTimeString()} - ${message}`);
+      const logTableBody = document.getElementById("logTable").getElementsByTagName("tbody")[0];
+      const timestamp = new Date().toLocaleString();
+      const row = `<tr><td>${timestamp}</td><td>Log</td><td>${message}</td><td>-</td></tr>`;
+      logTableBody.insertAdjacentHTML('beforeend', row);
+      const logTable = document.getElementById("logTable");
+      logTable.scrollTop = logTable.scrollHeight;
     }
 
+    // Toggle sidebar
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('hidden');
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('hidden');
     }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      initializeTokenDropdowns();
-      initializePriceFeedDropdowns();
-      if (window.ethereum) {
-        window.ethereum.on('accountsChanged', () => location.reload());
-        window.ethereum.on('chainChanged', () => location.reload());
-      }
-    });
-
-    // Placeholder for remaining functions (unchanged)
-    function setTradingParameters() { /* unchanged */ }
-    function setTechnicalParameters() { /* unchanged */ }
-    function setMinSignals() { /* unchanged */ }
-    async function manualSell() { /* similar to manualBuy with validation */ }
-    async function toggleAutoTrading() { /* unchanged with validation */ }
-    async function autoTrade(direction) { /* unchanged */ }
-    async function topUpContract() { /* unchanged with validation */ }
-    async function withdrawFunds() { /* unchanged with validation */ }
-    async function updatePnL() { /* unchanged */ }
-    async function fetchMarketData(token, timeframe) { /* unchanged */ }
-    async function updateSignals() { /* unchanged */ }
-    function calculateSignals(prices, volumes) { /* unchanged */ }
-    async function updateContractStatus() { /* unchanged */ }
-    async function pauseContract() { /* unchanged with validation */ }
-    async function unpauseContract() { /* unchanged with validation */ }
   </script>
+  <script src="https://unpkg.com/technicalindicators@3.1.0/dist/browser.min.js"></script>
   <script src="https://unpkg.com/web3@1.7.0/dist/web3.min.js"></script>
 </body>
 </html>
