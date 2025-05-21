@@ -6,7 +6,9 @@
   <meta name="description" content="Advanced Trading Bot for Polygon Network">
   <title>Trading Bot Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://unpkg.com/web3@1.7.0/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/technicalindicators@3.1.0/dist/browser.min.js"></script>
   <style>
     /* Reset and Global Styles */
     * {
@@ -15,411 +17,418 @@
       box-sizing: border-box;
     }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #1a1a1a;
-  color: #e0e0e0;
-  line-height: 1.5;
-  font-size: 16px;
-}
-
-.container {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 280px;
-  background-color: #222222;
-  padding: 20px;
-  transition: transform 0.3s ease;
-  border-right: 1px solid #333;
-}
-
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sidebar-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.sidebar-toggle {
-  background: none;
-  border: none;
-  color: #e0e0e0;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.main-toggle {
-  background: none;
-  border: none;
-  color: #e0e0e0;
-  font-size: 24px;
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  right: 10px; /* Position on the right side */
-  z-index: 1001;
-  display: none; /* Hidden by default */
-}
-
-.sidebar:not(.hidden) + .main-content .main-toggle {
-  display: none; /* Hidden when sidebar is visible */
-}
-
-.sidebar.hidden + .main-content .main-toggle {
-  display: block; /* Visible when sidebar is hidden */
-}
-
-.wallet-section, .contract-status, .timeframe-section {
-  margin-bottom: 20px;
-}
-
-.wallet-section p, .contract-status p, .timeframe-section p {
-  font-size: 14px;
-  margin-top: 10px;
-}
-
-.contract-status .btn {
-  margin-top: 10px;
-}
-
-.timeframe-section select {
-  width: 100%;
-  padding: 8px;
-  border-radius: 4px;
-  background: #333;
-  color: #e0e0e0;
-  border: 1px solid #444;
-}
-
-/* Main Content */
-.main-content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  position: relative;
-}
-
-.sidebar.hidden + .main-content {
-  padding-top: 40px; /* Space for main-toggle when sidebar is hidden */
-}
-
-.dashboard-header {
-  margin-bottom: 20px;
-}
-
-.dashboard-header h2 {
-  font-size: 28px;
-  font-weight: 600;
-}
-
-.dashboard-header p {
-  font-size: 14px;
-  color: #a0a0a0;
-}
-
-/* Card */
-.card {
-  background: #252525;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.card h3 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 15px;
-}
-
-/* Form Grid */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 14px;
-  margin-bottom: 5px;
-  color: #a0a0a0;
-}
-
-.form-group input, .form-group select {
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background: #333;
-  color: #e0e0e0;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus, .form-group select:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.form-group p {
-  font-size: 12px;
-  color: #a0a0a0;
-  margin-top: 5px;
-}
-
-/* Buttons */
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-secondary {
-  background-color: #444;
-  color: #e0e0e0;
-}
-
-.btn-secondary:hover {
-  background-color: #555;
-}
-
-.btn-buy {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.btn-buy:hover {
-  background-color: #218838;
-}
-
-.btn-sell {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.btn-sell:hover {
-  background-color: #c82333;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-.btn-success {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-}
-
-.btn-toggle {
-  background-color: #ffc107;
-  color: #000;
-}
-
-.btn-toggle:hover {
-  background-color: #e0a800;
-}
-
-.action-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.action-buttons p {
-  font-size: 14px;
-  color: #a0a0a0;
-  margin-left: 10px;
-}
-
-/* Table */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  padding: 12px;
-  text-align: left;
-  font-size: 14px;
-}
-
-th {
-  background: #333;
-  color: #e0e0e0;
-  font-weight: 600;
-}
-
-td {
-  border-bottom: 1px solid #444;
-}
-
-tr:hover {
-  background: #2a2a2a;
-}
-
-/* Log Area */
-.log-area {
-  max-height: 300px;
-  overflow-y: auto;
-  background: #333;
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #a0a0a0;
-}
-
-.log-area a {
-  color: #007bff;
-  text-decoration: none;
-}
-
-.log-area a:hover {
-  text-decoration: underline;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    height: 100%;
-    transform: translateX(0);
-    transition: transform 0.3s ease;
-  }
-
-  .sidebar.hidden {
-    transform: translateX(-100%);
-  }
-
-  .main-content {
-    padding: 10px;
-    margin-top: 0; /* Remove margin-top to ensure content is accessible */
-    overflow: auto;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-header h2 {
-    font-size: 24px;
-  }
-
-  .card h3 {
-    font-size: 18px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    font-size: 12px;
-  }
-
-  th, td {
-    font-size: 12px;
-    padding: 8px;
-  }
-}
-
-/* Accessibility */
-:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
-}
-
-[aria-live="polite"] {
-  overflow-anchor: none;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #333;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #666;
-}
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background-color: #222222;
+      padding: 20px;
+      transition: transform 0.3s ease;
+      border-right: 1px solid #333;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .sidebar-toggle {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .main-toggle {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1001;
+      display: none;
+    }
+
+    .sidebar:not(.hidden) + .main-content .main-toggle {
+      display: none;
+    }
+
+    .sidebar.hidden + .main-content .main-toggle {
+      display: block;
+    }
+
+    .wallet-section, .contract-status, .timeframe-section {
+      margin-bottom: 20px;
+    }
+
+    .wallet-section p, .contract-status p, .timeframe-section p {
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .contract-status .btn {
+      margin-top: 10px;
+    }
+
+    .timeframe-section select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      background: #333;
+      color: #e0e0e0;
+      border: 1px solid #444;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .sidebar.hidden + .main-content {
+      padding-top: 40px;
+    }
+
+    .dashboard-header {
+      margin-bottom: 20px;
+    }
+
+    .dashboard-header h2 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .dashboard-header p {
+      font-size: 14px;
+      color: #a0a0a0;
+    }
+
+    /* Card */
+    .card {
+      background: #252525;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    /* Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #a0a0a0;
+    }
+
+    .form-group input, .form-group select {
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background: #333;
+      color: #e0e0e0;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+
+    .form-group p {
+      font-size: 12px;
+      color: #a0a0a0;
+      margin-top: 5px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-secondary {
+      background-color: #444;
+      color: #e0e0e0;
+    }
+
+    .btn-secondary:hover {
+      background-color: #555;
+    }
+
+    .btn-buy {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .btn-buy:hover {
+      background-color: #218838;
+    }
+
+    .btn-sell {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .btn-sell:hover {
+      background-color: #c82333;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+
+    .btn-success {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background-color: #218838;
+    }
+
+    .btn-toggle {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    .btn-toggle:hover {
+      background-color: #e0a800;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action-buttons p {
+      font-size: 14px;
+      color: #a0a0a0;
+      margin-left: 10px;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #333;
+      color: #e0e0e0;
+      font-weight: 600;
+    }
+
+    td {
+      border-bottom: 1px solid #444;
+    }
+
+    tr:hover {
+      background: #2a2a2a;
+    }
+
+    /* Log Area */
+    .log-area {
+      max-height: 300px;
+      overflow-y: auto;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #a0a0a0;
+    }
+
+    .log-area a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .log-area a:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading Indicator */
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #a0a0a0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 100%;
+        transform: translateX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+
+      .main-content {
+        padding: 10px;
+        margin-top: 0;
+        overflow: auto;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .dashboard-header h2 {
+        font-size: 24px;
+      }
+
+      .card h3 {
+        font-size: 18px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+
+      th, td {
+        font-size: 12px;
+        padding: 8px;
+      }
+    }
+
+    /* Accessibility */
+    :focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+
+    [aria-live="polite"] {
+      overflow-anchor: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #333;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <!-- Sidebar (Visible on Load) -->
     <aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <h1>Trading Bot</h1>
-    <button class="sidebar-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
-  </div>
-  <div class="wallet-section">
-    <button id="connectButton" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
-    <button id="disconnectButton" class="btn btn-secondary" onclick="disconnectWallet()" style="display: none;">Disconnect Wallet</button>
-    <p id="walletStatus">Wallet: Not Connected</p>
-    <p id="nativeBalance">Native Balance: 0 MATIC</p>
-    <p id="pnlStatus">PnL: $0.00 (Since 12:00 AM WAT)</p>
-  </div>
-  <div class="timeframe-section">
-    <label for="timeframe">Timeframe:</label>
-    <select id="timeframe" onchange="setTimeframe()">
-      <option value="1m">1 Minute</option>
-      <option value="5m" selected>5 Minutes</option>
-      <option value="15m">15 Minutes</option>
-      <option value="1h">1 Hour</option>
-    </select>
-  </div>
-</aside>
+      <div class="sidebar-header">
+        <h1>Trading Bot</h1>
+        <button class="sidebar-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
+      </div>
+      <div class="wallet-section">
+        <button id="connectButton" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+        <button id="disconnectButton" class="btn btn-secondary" onclick="disconnectWallet()" style="display: none;">Disconnect Wallet</button>
+        <p id="walletStatus">Wallet: Not Connected</p>
+        <p id="nativeBalance">Native Balance: 0 MATIC</p>
+        <p id="pnlStatus">PnL: $0.00 (Since 12:00 AM WAT)</p>
+      </div>
+      <div class="timeframe-section">
+        <label for="timeframe">Timeframe:</label>
+        <select id="timeframe" onchange="setTimeframe()">
+          <option value="1m">1 Minute</option>
+          <option value="5m" selected>5 Minutes</option>
+          <option value="15m">15 Minutes</option>
+          <option value="1h">1 Hour</option>
+        </select>
+      </div>
+    </aside>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -430,16 +439,16 @@ tr:hover {
         <p id="priceStatus">Prices: Loading...</p>
       </header>
 
-  <!-- Contract Status -->
-  <section class="card contract-status">
-    <h3>Contract Status</h3>
-    <p id="contractStatus">Contract Status: Not Connected</p>
-    <div class="action-buttons">
-      <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()" style="display: none;">Pause Contract</button>
-      <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
-    </div>
-  </section>
-  
+      <!-- Contract Status -->
+      <section class="card contract-status">
+        <h3>Contract Status</h3>
+        <p id="contractStatus">Contract Status: Not Connected</p>
+        <div class="action-buttons">
+          <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()" style="display: none;">Pause Contract</button>
+          <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
+        </div>
+      </section>
+
       <!-- Current Tokens -->
       <section class="card current-tokens">
         <h3>Current Tokens</h3>
@@ -456,7 +465,7 @@ tr:hover {
             <select id="tokenIn" onchange="updateTokenDropdowns()">
               <option value="" disabled selected>Select Token</option>
             </select>
-            <input type="text" id="customTokenIn" placeholder="Custom Token Address">
+            <input type="text" id="customTokenIn" placeholder="Custom Token Address" aria-label="Custom Token In Address">
             <button onclick="addCustomToken('tokenIn')">Add Custom Token</button>
             <p id="tokenInInfo">Balance: 0.0000 | Value: $0.00</p>
           </div>
@@ -465,7 +474,7 @@ tr:hover {
             <select id="tokenOut" onchange="updateTokenDropdowns()">
               <option value="" disabled selected>Select Token</option>
             </select>
-            <input type="text" id="customTokenOut" placeholder="Custom Token Address">
+            <input type="text" id="customTokenOut" placeholder="Custom Token Address" aria-label="Custom Token Out Address">
             <button onclick="addCustomToken('tokenOut')">Add Custom Token</button>
             <p id="tokenOutInfo">Balance: 0.0000 | Value: $0.00</p>
           </div>
@@ -482,7 +491,7 @@ tr:hover {
             <select id="priceFeedIn">
               <option value="" disabled selected>Select Price Feed</option>
             </select>
-            <input type="text" id="customPriceFeedIn" placeholder="Custom Price Feed Address">
+            <input type="text" id="customPriceFeedIn" placeholder="Custom Price Feed Address" aria-label="Custom Price Feed In Address">
             <button onclick="addCustomPriceFeed('priceFeedIn')">Add Custom Price Feed</button>
           </div>
           <div class="form-group">
@@ -490,7 +499,7 @@ tr:hover {
             <select id="priceFeedOut">
               <option value="" disabled selected>Select Price Feed</option>
             </select>
-            <input type="text" id="customPriceFeedOut" placeholder="Custom Price Feed Address">
+            <input type="text" id="customPriceFeedOut" placeholder="Custom Price Feed Address" aria-label="Custom Price Feed Out Address">
             <button onclick="addCustomPriceFeed('priceFeedOut')">Add Custom Price Feed</button>
           </div>
         </div>
@@ -501,11 +510,20 @@ tr:hover {
       <section class="card charts" id="chartsSection" style="display: none;">
         <h3>Market Charts</h3>
         <div id="chartContainer">
-          <iframe id="tokenInChart" width="100%" height="400" frameborder="0"></iframe>
-          <iframe id="tokenOutChart" width="100%" height="400" frameborder="0"></iframe>
+          <div id="tokenInChart" style="width: 100%; height: 400px;"></div>
+          <div id="tokenOutChart" style="width: 100%; height: 400px;"></div>
         </div>
         <button class="btn btn-secondary" onclick="refreshCharts()">Refresh Charts</button>
         <button class="btn btn-secondary" onclick="toggleCharts()">Hide Charts</button>
+      </section>
+
+      <!-- Individual Token Charts -->
+      <section class="card token-charts">
+        <h3>Individual Token Charts</h3>
+        <select id="chartTokenSelect" onchange="displayTokenChart()">
+          <option value="" disabled selected>Select Token for Chart</option>
+        </select>
+        <div id="selectedTokenChart" style="width: 100%; height: 400px;"></div>
       </section>
 
       <!-- Trading Parameters -->
@@ -514,15 +532,15 @@ tr:hover {
         <div class="form-grid">
           <div class="form-group">
             <label for="profitRange">Profit Range (%):</label>
-            <input type="number" id="profitRange" value="1" min="0" step="0.1">
+            <input type="number" id="profitRange" value="1" min="0" step="0.1" aria-label="Profit Range Percentage">
           </div>
           <div class="form-group">
             <label for="stopLoss">Stop Loss (%):</label>
-            <input type="number" id="stopLoss" value="1" min="0" step="0.1">
+            <input type="number" id="stopLoss" value="1" min="0" step="0.1" aria-label="Stop Loss Percentage">
           </div>
           <div class="form-group">
             <label for="slippage">Slippage (%):</label>
-            <input type="number" id="slippage" value="1" min="0" step="0.1">
+            <input type="number" id="slippage" value="1" min="0" step="0.1" aria-label="Slippage Percentage">
           </div>
         </div>
         <button class="btn btn-secondary" onclick="setTradingParameters()">Set Parameters</button>
@@ -534,58 +552,70 @@ tr:hover {
         <div class="form-grid">
           <div class="form-group">
             <label for="macdFast">MACD Fast:</label>
-            <input type="number" id="macdFast" value="12" min="1">
+            <input type="number" id="macdFast" value="12" min="1" aria-label="MACD Fast Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('macdFast')">Update</button>
           </div>
           <div class="form-group">
             <label for="macdSlow">MACD Slow:</label>
-            <input type="number" id="macdSlow" value="26" min="1">
+            <input type="number" id="macdSlow" value="26" min="1" aria-label="MACD Slow Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('macdSlow')">Update</button>
           </div>
           <div class="form-group">
             <label for="macdSignal">MACD Signal:</label>
-            <input type="number" id="macdSignal" value="9" min="1">
+            <input type="number" id="macdSignal" value="9" min="1" aria-label="MACD Signal Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('macdSignal')">Update</button>
           </div>
           <div class="form-group">
             <label for="rsiPeriod">RSI Period:</label>
-            <input type="number" id="rsiPeriod" value="14" min="1">
+            <input type="number" id="rsiPeriod" value="14" min="1" aria-label="RSI Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('rsiPeriod')">Update</button>
           </div>
           <div class="form-group">
             <label for="minRsi">Min RSI:</label>
-            <input type="number" id="minRsi" value="30" min="0" max="100">
+            <input type="number" id="minRsi" value="30" min="0" max="100" aria-label="Minimum RSI">
+            <button class="btn btn-secondary" onclick="updateTechParam('minRsi')">Update</button>
           </div>
           <div class="form-group">
             <label for="maxRsi">Max RSI:</label>
-            <input type="number" id="maxRsi" value="70" min="0" max="100">
+            <input type="number" id="maxRsi" value="70" min="0" max="100" aria-label="Maximum RSI">
+            <button class="btn btn-secondary" onclick="updateTechParam('maxRsi')">Update</button>
           </div>
           <div class="form-group">
             <label for="volumePeriod">Volume Period:</label>
-            <input type="number" id="volumePeriod" value="14" min="1">
+            <input type="number" id="volumePeriod" value="14" min="1" aria-label="Volume Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('volumePeriod')">Update</button>
           </div>
           <div class="form-group">
             <label for="minVolumeSpike">Min Volume Spike:</label>
-            <input type="number" id="minVolumeSpike" value="1.5" min="0" step="0.1">
+            <input type="number" id="minVolumeSpike" value="1.5" min="0" step="0.1" aria-label="Minimum Volume Spike">
+            <button class="btn btn-secondary" onclick="updateTechParam('minVolumeSpike')">Update</button>
           </div>
           <div class="form-group">
             <label for="maxVolumeSpike">Max Volume Spike:</label>
-            <input type="number" id="maxVolumeSpike" value="3.0" min="0" step="0.1">
+            <input type="number" id="maxVolumeSpike" value="3.0" min="0" step="0.1" aria-label="Maximum Volume Spike">
+            <button class="btn btn-secondary" onclick="updateTechParam('maxVolumeSpike')">Update</button>
           </div>
           <div class="form-group">
             <label for="emaPeriod">EMA Period:</label>
-            <input type="number" id="emaPeriod" value="20" min="1">
+            <input type="number" id="emaPeriod" value="20" min="1" aria-label="EMA Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('emaPeriod')">Update</button>
           </div>
           <div class="form-group">
             <label for="bollingerPeriod">Bollinger Period:</label>
-            <input type="number" id="bollingerPeriod" value="20" min="1">
+            <input type="number" id="bollingerPeriod" value="20" min="1" aria-label="Bollinger Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('bollingerPeriod')">Update</button>
           </div>
           <div class="form-group">
             <label for="bollingerStdDev">Bollinger Std Dev:</label>
-            <input type="number" id="bollingerStdDev" value="2" min="0" step="0.1">
+            <input type="number" id="bollingerStdDev" value="2" min="0" step="0.1" aria-label="Bollinger Standard Deviation">
+            <button class="btn btn-secondary" onclick="updateTechParam('bollingerStdDev')">Update</button>
           </div>
           <div class="form-group">
             <label for="minSignals">Minimum Signals:</label>
-            <input type="number" id="minSignals" value="2" min="1" max="7" onchange="setMinSignals()">
+            <input type="number" id="minSignals" value="2" min="1" max="7" aria-label="Minimum Signals">
+            <button class="btn btn-secondary" onclick="updateTechParam('minSignals')">Update</button>
           </div>
         </div>
-        <button class="btn btn-secondary" onclick="setTechnicalParameters()">Set Technical Parameters</button>
       </section>
 
       <!-- Trading Actions -->
@@ -594,13 +624,13 @@ tr:hover {
         <div class="action-buttons">
           <div class="form-group">
             <label for="buyAmount">Buy Amount:</label>
-            <input type="number" id="buyAmount" value="1" min="0" step="0.01">
+            <input type="number" id="buyAmount" value="1" min="0" step="0.01" aria-label="Buy Amount in Tokens">
           </div>
           <button class="btn btn-buy" onclick="manualBuy()">Buy</button>
           <p id="buyResult">Result: None</p>
           <div class="form-group">
             <label for="sellAmount">Sell Amount:</label>
-            <input type="number" id="sellAmount" value="1" min="0" step="0.01">
+            <input type="number" id="sellAmount" value="1" min="0" step="0.01" aria-label="Sell Amount in Tokens">
           </div>
           <button class="btn btn-sell" onclick="manualSell()">Sell</button>
           <p id="sellResult">Result: None</p>
@@ -650,7 +680,7 @@ tr:hover {
             <label for="topUpToken">Top-Up Token:</label>
             <select id="topUpToken"></select>
             <label for="topUpAmount">Amount:</label>
-            <input type="number" id="topUpAmount" value="0" min="0" step="0.01">
+            <input type="number" id="topUpAmount" value="0" min="0" step="0.01" aria-label="Top-Up Amount">
             <p id="topUpValue">Value: $0.00</p>
             <button class="btn btn-secondary" onclick="topUpContract()">Top Up</button>
             <p id="topUpResult">Result: None</p>
@@ -659,7 +689,8 @@ tr:hover {
             <label for="budgetToken">Budget Token:</label>
             <select id="budgetToken"></select>
             <label for="budgetAmount">Amount:</label>
-            <input type="number" id="budgetAmount" value="0" min="0" step="0.01">
+            <input type="number" id="budgetAmount" value="0" min="0" step="0.01" aria-label="Budget Amount">
+            <button class="btn btn-secondary" onclick="setBudgetToOnePercent()">Set to 1%</button>
             <p id="budgetValue">Value: $0.00</p>
             <button class="btn btn-secondary" onclick="approveBudget()">Approve Budget</button>
             <button class="btn btn-danger" onclick="revokeBudget()">Revoke Budget</button>
@@ -669,7 +700,7 @@ tr:hover {
             <label for="withdrawToken">Withdraw Token:</label>
             <select id="withdrawToken"></select>
             <label for="withdrawAmount">Amount:</label>
-            <input type="number" id="withdrawAmount" value="0" min="0" step="0.01">
+            <input type="number" id="withdrawAmount" value="0" min="0" step="0.01" aria-label="Withdraw Amount">
             <p id="withdrawValue">Value: $0.00</p>
             <button class="btn btn-secondary" onclick="withdrawFunds()">Withdraw</button>
             <p id="withdrawResult">Result: None</p>
@@ -701,11 +732,9 @@ tr:hover {
     const NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
     const POLYGONSCAN_URL = 'https://polygonscan.com/tx/';
 
-    // Public RPC for fetching token details without wallet connection
     const PUBLIC_RPC_URL = 'https://polygon-rpc.com';
     const publicWeb3 = new Web3(new Web3.providers.HttpProvider(PUBLIC_RPC_URL));
 
-    // Predefined tokens with price feeds
     const TOKENS = [
       { name: 'USDT', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6, coingeckoId: 'tether', priceFeed: '0x0A6513e40db6EB1b165753AD52E80663aeA50545' },
       { name: 'USDC', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6, coingeckoId: 'usd-coin', priceFeed: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7' },
@@ -717,7 +746,6 @@ tr:hover {
       { name: 'WBTC', address: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', decimals: 8, coingeckoId: 'wrapped-bitcoin', priceFeed: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6' }
     ];
 
-    // Predefined price feeds
     let priceFeedsList = [
       { name: 'USDT / USD', address: '0x0A6513e40db6EB1b165753AD52E80663aeA50545' },
       { name: 'USDC / USD', address: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7' },
@@ -729,7 +757,6 @@ tr:hover {
       { name: 'WBTC / USD', address: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6' }
     ];
 
-    // Global state
     let web3, account, contract;
     let autoTradingActive = false;
     let autoTradingInterval;
@@ -752,9 +779,7 @@ tr:hover {
       minSignals: 2
     };
     let dailyPnL = 0;
-    let lastPnLReset = 0;
 
-    // TradingBot ABI (unchanged)
     const CONTRACT_ABI = [
       {
         "inputs": [
@@ -1496,7 +1521,6 @@ tr:hover {
       }
     ];
 
-    // Updated ERC20 ABI to include symbol
     const ERC20_ABI = [
       "function balanceOf(address) view returns (uint256)",
       "function approve(address spender, uint256 amount) external returns (bool)",
@@ -1505,10 +1529,8 @@ tr:hover {
       "function symbol() view returns (string)"
     ];
 
-    // Address validation regex
     const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
 
-    // Initialize dropdowns on page load
     document.addEventListener("DOMContentLoaded", () => {
       initializeDropdowns();
       if (window.ethereum) {
@@ -1517,7 +1539,6 @@ tr:hover {
       }
     });
 
-    // Initialize all dropdowns
     function initializeDropdowns() {
       const tokenSelects = ['tokenIn', 'tokenOut', 'budgetToken', 'topUpToken', 'withdrawToken'];
       tokenSelects.forEach(selectId => {
@@ -1546,9 +1567,16 @@ tr:hover {
           select.add(option);
         });
       });
+
+      const chartTokenSelect = document.getElementById('chartTokenSelect');
+      TOKENS.forEach(token => {
+        const option = document.createElement('option');
+        option.value = token.coingeckoId;
+        option.text = token.name;
+        chartTokenSelect.add(option);
+      });
     }
 
-    // Add custom token
     async function addCustomToken(type) {
       const inputId = type === 'tokenIn' ? 'customTokenIn' : 'customTokenOut';
       const address = document.getElementById(inputId).value.trim();
@@ -1570,7 +1598,6 @@ tr:hover {
       }
     }
 
-    // Add custom price feed
     async function addCustomPriceFeed(type) {
       const inputId = type === 'priceFeedIn' ? 'customPriceFeedIn' : 'customPriceFeedOut';
       const address = document.getElementById(inputId).value.trim();
@@ -1585,7 +1612,6 @@ tr:hover {
       logMessage(`Added custom price feed: ${address}`);
     }
 
-    // Update token dropdowns
     function updateTokenDropdowns() {
       const tokenSelects = ['tokenIn', 'tokenOut', 'budgetToken', 'topUpToken', 'withdrawToken'];
       tokenSelects.forEach(selectId => {
@@ -1609,7 +1635,6 @@ tr:hover {
       }
     }
 
-    // Update price feed dropdowns
     function updatePriceFeedDropdowns() {
       const priceFeedSelects = ['priceFeedIn', 'priceFeedOut'];
       priceFeedSelects.forEach(selectId => {
@@ -1626,7 +1651,6 @@ tr:hover {
       });
     }
 
-    // Fetch token decimals
     async function getTokenDecimals(tokenAddress, usePublic = false) {
       if (tokenAddress === NATIVE_ADDRESS) return 18;
       try {
@@ -1636,12 +1660,11 @@ tr:hover {
         const decimals = await tokenContract.methods.decimals().call();
         return Number(decimals);
       } catch (error) {
-        logMessage(`Failed to fetch decimals for ${tokenAddress}. Assuming 0 decimals.`);
-        return 0; // Allow non-standard tokens
+        logMessage(`Failed to fetch decimals for ${tokenAddress}. Assuming 18 decimals.`);
+        return 18;
       }
     }
 
-    // Update token info (balance and value)
     async function updateTokenInfo() {
       if (!contract) return;
       const tokenInValue = document.getElementById("tokenIn").value;
@@ -1665,7 +1688,6 @@ tr:hover {
       }
     }
 
-    // Update current tokens display
     async function updateCurrentTokens() {
       if (!contract) return;
       try {
@@ -1694,7 +1716,6 @@ tr:hover {
       }
     }
 
-    // Set tokens independently
     async function setTokens() {
       if (!contract) {
         logMessage('Please connect wallet first');
@@ -1732,7 +1753,6 @@ tr:hover {
       }
     }
 
-    // Set price feeds independently
     async function setPriceFeeds() {
       if (!contract) {
         logMessage('Please connect wallet first');
@@ -1762,171 +1782,206 @@ tr:hover {
       }
     }
 
-    // Update charts
+    async function fetchHistoricalData(tokenId) {
+      if (!tokenId) return [];
+      try {
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/coins/${tokenId}/market_chart?vs_currency=usd&days=30&interval=daily`
+        );
+        const data = await response.json();
+        return data.prices.map((price) => ({
+          time: price[0] / 1000,
+          value: price[1],
+        }));
+      } catch (error) {
+        logMessage(`Failed to fetch historical data for ${tokenId}`);
+        return [];
+      }
+    }
+
+    async function generateChart(tokenId, chartElementId) {
+      const chartElement = document.getElementById(chartElementId);
+      if (!chartElement) return;
+
+      chartElement.innerHTML = '<div class="loading">Loading chart...</div>';
+
+      const data = await fetchHistoricalData(tokenId);
+      if (!data || data.length === 0) {
+        chartElement.innerText = 'No data available';
+        return;
+      }
+
+      const chart = LightweightCharts.createChart(chartElement, {
+        width: chartElement.clientWidth,
+        height: 400,
+        layout: {
+          backgroundColor: '#1a1a1a',
+          textColor: '#e0e0e0',
+        },
+        grid: {
+          vertLines: { color: '#333' },
+          horzLines: { color: '#333' },
+        },
+        priceScale: { borderColor: '#333' },
+        timeScale: { borderColor: '#333' },
+      });
+
+      const lineSeries = chart.addLineSeries();
+      lineSeries.setData(data);
+
+      chartElement.querySelector('.loading')?.remove();
+    }
+
     function updateCharts() {
-      const tokenInId = TOKENS.find(t => t.address === tokenIn)?.coingeckoId;
-      const tokenOutId = TOKENS.find(t => t.address === tokenOut)?.coingeckoId;
-      const tokenInChart = document.getElementById("tokenInChart");
-      const tokenOutChart = document.getElementById("tokenOutChart");
+      const tokenInId = TOKENS.find((t) => t.address === tokenIn)?.coingeckoId;
+      const tokenOutId = TOKENS.find((t) => t.address === tokenOut)?.coingeckoId;
 
       if (tokenInId) {
-        tokenInChart.src = `https://www.coingecko.com/en/coins/${tokenInId}/usd?embed=true`;
+        generateChart(tokenInId, 'tokenInChart');
       } else {
-        tokenInChart.src = '';
+        document.getElementById('tokenInChart').innerText = 'No chart available';
       }
+
       if (tokenOutId) {
-        tokenOutChart.src = `https://www.coingecko.com/en/coins/${tokenOutId}/usd?embed=true`;
+        generateChart(tokenOutId, 'tokenOutChart');
       } else {
-        tokenOutChart.src = '';
+        document.getElementById('tokenOutChart').innerText = 'No chart available';
       }
     }
 
-    // Refresh charts
     function refreshCharts() {
-      const tokenInChart = document.getElementById("tokenInChart");
-      const tokenOutChart = document.getElementById("tokenOutChart");
-      if (tokenInChart.src) tokenInChart.src = tokenInChart.src;
-      if (tokenOutChart.src) tokenOutChart.src = tokenOutChart.src;
+      updateCharts();
     }
 
-    // Toggle charts visibility
     function toggleCharts() {
-      const chartsSection = document.getElementById("chartsSection");
+      const chartsSection = document.getElementById('chartsSection');
       const toggleButton = document.querySelector("#chartsSection button[onclick='toggleCharts()']");
       if (chartsSection.style.display === 'none') {
         chartsSection.style.display = 'block';
         toggleButton.innerText = 'Hide Charts';
+        updateCharts();
       } else {
         chartsSection.style.display = 'none';
         toggleButton.innerText = 'Show Charts';
       }
     }
 
-    // Connect wallet
-async function connectWallet() {
-  if (!window.ethereum) {
-    logMessage("MetaMask not detected. Please install MetaMask.");
-    return;
-  }
-
-  // Initialize web3 safely
-  let localWeb3;
-  try {
-    localWeb3 = new Web3(window.ethereum);
-  } catch (initError) {
-    logMessage(`Failed to initialize Web3: ${initError.message}`);
-    return;
-  }
-
-  try {
-    // Request accounts
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    account = accounts[0];
-
-    // Check Polygon network (chain ID 137)
-    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    if (parseInt(chainId, 16) !== 137) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x89' }], // Polygon Mainnet
-        });
-      } catch (switchError) {
-        logMessage("Please switch to the Polygon network in MetaMask.");
-        return;
+    function displayTokenChart() {
+      const tokenId = document.getElementById('chartTokenSelect').value;
+      if (tokenId) {
+        generateChart(tokenId, 'selectedTokenChart');
       }
     }
 
-    // Assign global web3 and initialize contract
-    web3 = localWeb3;
-    contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    async function connectWallet() {
+      if (!window.ethereum) {
+        logMessage("MetaMask not detected. Please install MetaMask.");
+        return;
+      }
 
-    // Update UI
-    document.getElementById("walletStatus").innerText = `Wallet: ${account}`;
-    logMessage(`Connected wallet: ${account}`);
-    document.getElementById('connectButton').style.display = 'none';
-    document.getElementById('disconnectButton').style.display = 'block';
+      let localWeb3;
+      try {
+        localWeb3 = new Web3(window.ethereum);
+      } catch (initError) {
+        logMessage(`Failed to initialize Web3: ${initError.message}`);
+        return;
+      }
 
-    // Trigger UI updates
-    updateTokenInfo();
-    updateCurrentTokens();
-    updatePrices();
-    updateBudgetStatus();
-    updateWalletBalances();
-    updateWithdrawDropdown();
-    updateNativeBalance();
-    updatePnL();
-    updateContractStatus();
-    updateTransactionLog();
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        account = accounts[0];
 
-    // Store intervals for disconnection
-    window.pnlInterval = setInterval(updatePnL, 10 * 60 * 1000); // Update PnL every 10 minutes
-    window.balanceInterval = setInterval(updateNativeBalance, 30 * 1000); // Update balance every 30 seconds
-  } catch (error) {
-    if (error.code === 4001) {
-      logMessage("Wallet connection rejected by user.");
-    } else if (error.code === -32002) {
-      logMessage("Wallet connection request already pending in MetaMask.");
-    } else {
-      logMessage(`Failed to connect wallet: ${error.message}`);
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (parseInt(chainId, 16) !== 137) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x89' }],
+            });
+          } catch (switchError) {
+            logMessage("Please switch to the Polygon network in MetaMask.");
+            return;
+          }
+        }
+
+        web3 = localWeb3;
+        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+
+        document.getElementById("walletStatus").innerText = `Wallet: ${account}`;
+        logMessage(`Connected wallet: ${account}`);
+        document.getElementById('connectButton').style.display = 'none';
+        document.getElementById('disconnectButton').style.display = 'block';
+
+        updateTokenInfo();
+        updateCurrentTokens();
+        updatePrices();
+        updateBudgetStatus();
+        updateWalletBalances();
+        updateWithdrawDropdown();
+        updateNativeBalance();
+        updatePnL();
+        updateContractStatus();
+        updateTransactionLog();
+
+        window.pnlInterval = setInterval(updatePnL, 10 * 60 * 1000);
+        window.balanceInterval = setInterval(updateNativeBalance, 30 * 1000);
+      } catch (error) {
+        if (error.code === 4001) {
+          logMessage("Wallet connection rejected by user.");
+        } else if (error.code === -32002) {
+          logMessage("Wallet connection request already pending in MetaMask.");
+        } else {
+          logMessage(`Failed to connect wallet: ${error.message}`);
+        }
+      }
     }
-  }
-}
 
-    // Disconnect wallet
-function disconnectWallet() {
-  // Reset global state
-  account = null;
-  contract = null;
-  web3 = null;
-  tokenIn = null;
-  tokenOut = null;
-  priceFeedIn = null;
-  priceFeedOut = null;
-  autoTradingActive = false;
-  clearInterval(autoTradingInterval); // Clear auto-trading interval
-  clearInterval(window.pnlInterval); // Clear PnL update interval
-  clearInterval(window.balanceInterval); // Clear native balance update interval
+    function disconnectWallet() {
+      account = null;
+      contract = null;
+      web3 = null;
+      tokenIn = null;
+      tokenOut = null;
+      priceFeedIn = null;
+      priceFeedOut = null;
+      autoTradingActive = false;
+      clearInterval(autoTradingInterval);
+      clearInterval(window.pnlInterval);
+      clearInterval(window.balanceInterval);
 
-  // Reset UI elements
-  document.getElementById('walletStatus').innerText = 'Wallet: Not Connected';
-  document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
-  document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
-  document.getElementById('contractStatus').innerText = 'Contract Status: Not Connected';
-  document.getElementById('pauseButton').style.display = 'none';
-  document.getElementById('unpauseButton').style.display = 'none';
-  document.getElementById('currentTokenIn').innerText = 'Token In: Not Set';
-  document.getElementById('currentTokenOut').innerText = 'Token Out: Not Set';
-  document.getElementById('tokenInInfo').innerText = 'Balance: 0.0000 | Value: $0.00';
-  document.getElementById('tokenOutInfo').innerText = 'Balance: 0.0000 | Value: $0.00';
-  document.getElementById('priceStatus').innerText = 'Prices: Loading...';
-  document.getElementById('autoTradingStatus').innerText = 'Auto-Trading: Off';
-  document.getElementById('toggleAutoTrading').innerText = 'Toggle Auto-Trading (Off)';
-  document.getElementById('buyResult').innerText = 'Result: None';
-  document.getElementById('sellResult').innerText = 'Result: None';
-  document.getElementById('topUpResult').innerText = 'Result: None';
-  document.getElementById('withdrawResult').innerText = 'Result: None';
-  document.getElementById('budgetStatus').innerText = 'Budget: 0 MATIC';
-  document.getElementById('analysisResult').innerText = 'Market Analysis: Loading...';
+      document.getElementById('walletStatus').innerText = 'Wallet: Not Connected';
+      document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
+      document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
+      document.getElementById('contractStatus').innerText = 'Contract Status: Not Connected';
+      document.getElementById('pauseButton').style.display = 'none';
+      document.getElementById('unpauseButton').style.display = 'none';
+      document.getElementById('currentTokenIn').innerText = 'Token In: Not Set';
+      document.getElementById('currentTokenOut').innerText = 'Token Out: Not Set';
+      document.getElementById('tokenInInfo').innerText = 'Balance: 0.0000 | Value: $0.00';
+      document.getElementById('tokenOutInfo').innerText = 'Balance: 0.0000 | Value: $0.00';
+      document.getElementById('priceStatus').innerText = 'Prices: Loading...';
+      document.getElementById('autoTradingStatus').innerText = 'Auto-Trading: Off';
+      document.getElementById('toggleAutoTrading').innerText = 'Toggle Auto-Trading (Off)';
+      document.getElementById('buyResult').innerText = 'Result: None';
+      document.getElementById('sellResult').innerText = 'Result: None';
+      document.getElementById('topUpResult').innerText = 'Result: None';
+      document.getElementById('withdrawResult').innerText = 'Result: None';
+      document.getElementById('budgetStatus').innerText = 'Budget: 0 MATIC';
+      document.getElementById('analysisResult').innerText = 'Market Analysis: Loading...';
 
-  // Clear tables
-  document.getElementById('walletBalances').getElementsByTagName('tbody')[0].innerHTML = '';
-  document.getElementById('tokenSignals').getElementsByTagName('tbody')[0].innerHTML = '';
-  document.getElementById('logTable').getElementsByTagName('tbody')[0].innerHTML = '';
+      document.getElementById('walletBalances').getElementsByTagName('tbody')[0].innerHTML = '';
+      document.getElementById('tokenSignals').getElementsByTagName('tbody')[0].innerHTML = '';
+      document.getElementById('logTable').getElementsByTagName('tbody')[0].innerHTML = '';
 
-  // Reset withdraw dropdown
-  const withdrawSelect = document.getElementById('withdrawToken');
-  withdrawSelect.innerHTML = '<option value="" disabled selected>Select Token</option>';
+      const withdrawSelect = document.getElementById('withdrawToken');
+      withdrawSelect.innerHTML = '<option value="" disabled selected>Select Token</option>';
 
-  // Update button visibility
-  document.getElementById('connectButton').style.display = 'block';
-  document.getElementById('disconnectButton').style.display = 'none';
+      document.getElementById('connectButton').style.display = 'block';
+      document.getElementById('disconnectButton').style.display = 'none';
 
-  // Log disconnection
-  logMessage('Wallet disconnected');
-}
+      logMessage('Wallet disconnected');
+    }
 
-    // Check contract paused state
     async function isContractPaused() {
       if (!contract) return false;
       try {
@@ -1937,28 +1992,26 @@ function disconnectWallet() {
       }
     }
 
-// Update contract status UI
-async function updateContractStatus() {
-  if (!contract) {
-    document.getElementById("contractStatus").innerText = "Contract Status: Not Connected";
-    document.getElementById("pauseButton").style.display = "none";
-    document.getElementById("unpauseButton").style.display = "none";
-    return;
-  }
-  try {
-    const isPaused = await isContractPaused();
-    document.getElementById("contractStatus").innerText = `Contract Status: ${isPaused ? 'Paused' : 'Active'}`;
-    document.getElementById("pauseButton").style.display = isPaused ? 'none' : 'block';
-    document.getElementById("unpauseButton").style.display = isPaused ? 'block' : 'none';
-  } catch (error) {
-    document.getElementById("contractStatus").innerText = "Contract Status: Error Fetching Status";
-    document.getElementById("pauseButton").style.display = "none";
-    document.getElementById("unpauseButton").style.display = "none";
-    logMessage('Failed to fetch contract status.');
-  }
-}
+    async function updateContractStatus() {
+      if (!contract) {
+        document.getElementById("contractStatus").innerText = "Contract Status: Not Connected";
+        document.getElementById("pauseButton").style.display = "none";
+        document.getElementById("unpauseButton").style.display = "none";
+        return;
+      }
+      try {
+        const isPaused = await isContractPaused();
+        document.getElementById("contractStatus").innerText = `Contract Status: ${isPaused ? 'Paused' : 'Active'}`;
+        document.getElementById("pauseButton").style.display = isPaused ? 'none' : 'block';
+        document.getElementById("unpauseButton").style.display = isPaused ? 'block' : 'none';
+      } catch (error) {
+        document.getElementById("contractStatus").innerText = "Contract Status: Error Fetching Status";
+        document.getElementById("pauseButton").style.display = "none";
+        document.getElementById("unpauseButton").style.display = "none";
+        logMessage('Failed to fetch contract status.');
+      }
+    }
 
-    // Pause contract
     async function pauseContract() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -1974,7 +2027,6 @@ async function updateContractStatus() {
       }
     }
 
-    // Unpause contract
     async function unpauseContract() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -1990,14 +2042,12 @@ async function updateContractStatus() {
       }
     }
 
-    // Set timeframe
     function setTimeframe() {
       timeframe = document.getElementById("timeframe").value;
       logMessage(`Timeframe set to ${timeframe}`);
       updateSignals();
     }
 
-    // Set trading parameters
     function setTradingParameters() {
       const profitRange = parseFloat(document.getElementById("profitRange").value);
       const stopLoss = parseFloat(document.getElementById("stopLoss").value);
@@ -2014,43 +2064,50 @@ async function updateContractStatus() {
       logMessage(`Trading parameters set - Profit: ${tradingParams.profitRange}%, Stop Loss: ${tradingParams.stopLoss}%, Slippage: ${tradingParams.slippage}%`);
     }
 
-    // Set technical parameters
-    function setTechnicalParameters() {
-      techParams.macdFast = parseInt(document.getElementById("macdFast").value);
-      techParams.macdSlow = parseInt(document.getElementById("macdSlow").value);
-      techParams.macdSignal = parseInt(document.getElementById("macdSignal").value);
-      techParams.rsiPeriod = parseInt(document.getElementById("rsiPeriod").value);
-      techParams.minRsi = parseInt(document.getElementById("minRsi").value);
-      techParams.maxRsi = parseInt(document.getElementById("maxRsi").value);
-      techParams.volumePeriod = parseInt(document.getElementById("volumePeriod").value);
-      techParams.minVolumeSpike = parseFloat(document.getElementById("minVolumeSpike").value);
-      techParams.maxVolumeSpike = parseFloat(document.getElementById("maxVolumeSpike").value);
-      techParams.emaPeriod = parseInt(document.getElementById("emaPeriod").value);
-      techParams.bollingerPeriod = parseInt(document.getElementById("bollingerPeriod").value);
-      techParams.bollingerStdDev = parseFloat(document.getElementById("bollingerStdDev").value);
+    function updateTechParam(paramName) {
+      const input = document.getElementById(paramName);
+      let value = input.value.trim();
+      let parsedValue;
 
-      if (Object.values(techParams).some(val => isNaN(val) || val <= 0)) {
-        logMessage('Invalid technical parameters. Please enter positive numbers.');
+      const integerParams = [
+        'macdFast', 'macdSlow', 'macdSignal', 'rsiPeriod', 'volumePeriod',
+        'emaPeriod', 'bollingerPeriod', 'minSignals'
+      ];
+      const isInteger = integerParams.includes(paramName);
+      parsedValue = isInteger ? parseInt(value) : parseFloat(value);
+
+      if (isNaN(parsedValue) || parsedValue <= 0) {
+        logMessage(`${paramName} must be a positive number.`);
         return;
       }
 
-      logMessage("Technical parameters updated");
-      updateSignals();
-    }
+      if (paramName === 'minRsi' || paramName === 'maxRsi') {
+        if (parsedValue < 0 || parsedValue > 100) {
+          logMessage(`${paramName} must be between 0 and 100.`);
+          return;
+        }
+        const minRsi = parseFloat(document.getElementById('minRsi').value);
+        const maxRsi = parseFloat(document.getElementById('maxRsi').value);
+        if (paramName === 'minRsi' && parsedValue >= maxRsi) {
+          logMessage('Min RSI must be less than Max RSI.');
+          return;
+        }
+        if (paramName === 'maxRsi' && parsedValue <= minRsi) {
+          logMessage('Max RSI must be greater than Min RSI.');
+          return;
+        }
+      }
 
-    // Set minimum signals
-    function setMinSignals() {
-      const minSignals = parseInt(document.getElementById("minSignals").value);
-      if (isNaN(minSignals) || minSignals < 1 || minSignals > 7) {
-        logMessage('Minimum signals must be between 1 and 7');
+      if (paramName === 'minSignals' && (parsedValue < 1 || parsedValue > 7)) {
+        logMessage('Minimum Signals must be between 1 and 7.');
         return;
       }
-      techParams.minSignals = minSignals;
-      logMessage(`Minimum signals set to ${techParams.minSignals}`);
+
+      techParams[paramName] = parsedValue;
+      logMessage(`${paramName} updated to ${parsedValue}`);
       updateSignals();
     }
 
-    // Fetch CoinGecko price
     async function getCoinGeckoPrice(coingeckoId) {
       if (!coingeckoId) return 0;
       try {
@@ -2063,7 +2120,6 @@ async function updateContractStatus() {
       }
     }
 
-    // Update prices
     async function updatePrices() {
       if (!contract || !tokenIn || !tokenOut || !priceFeedIn || !priceFeedOut) return;
       try {
@@ -2080,7 +2136,6 @@ async function updateContractStatus() {
       }
     }
 
-    // Get contract balance
     async function getContractBalance(tokenAddress) {
       if (!contract) return 0;
       try {
@@ -2099,7 +2154,6 @@ async function updateContractStatus() {
       }
     }
 
-    // Update wallet balances
     async function updateWalletBalances() {
       if (!account || !web3) return;
       const tbody = document.getElementById("walletBalances").getElementsByTagName("tbody")[0];
@@ -2122,7 +2176,6 @@ async function updateContractStatus() {
       }
     }
 
-    // Update withdraw dropdown
     async function updateWithdrawDropdown() {
       if (!contract) return;
       const withdrawSelect = document.getElementById("withdrawToken");
@@ -2137,46 +2190,42 @@ async function updateContractStatus() {
       }
     }
 
-    // Update native balance
-async function updateNativeBalance() {
-  if (!web3 || !account) {
-    document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
-    return;
-  }
-  try {
-    const balance = await web3.eth.getBalance(account);
-    const balanceMATIC = web3.utils.fromWei(balance, 'ether');
-    document.getElementById('nativeBalance').innerText = `Native Balance: ${parseFloat(balanceMATIC).toFixed(4)} MATIC`;
-  } catch (error) {
-    document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
-    logMessage('Failed to fetch native balance.');
-  }
-}
+    async function updateNativeBalance() {
+      if (!web3 || !account) {
+        document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
+        return;
+      }
+      try {
+        const balance = await web3.eth.getBalance(account);
+        const balanceMATIC = web3.utils.fromWei(balance, 'ether');
+        document.getElementById('nativeBalance').innerText = `Native Balance: ${parseFloat(balanceMATIC).toFixed(4)} MATIC`;
+      } catch (error) {
+        document.getElementById('nativeBalance').innerText = 'Native Balance: 0 MATIC';
+        logMessage('Failed to fetch native balance.');
+      }
+    }
 
-    // Update PnL
-async function updatePnL() {
-  if (!contract || !account) {
-    document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
-    return;
-  }
-  try {
-    // Placeholder for PnL calculation
-    const pnl = await contract.methods.getPnL().call();
-    document.getElementById('pnlStatus').innerText = `PnL: $${parseFloat(pnl).toFixed(2)} (Since 12:00 AM WAT)`;
-  } catch (error) {
-    document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
-    logMessage('Failed to update PnL.');
-  }
-}
+    async function updatePnL() {
+      if (!contract || !account) {
+        document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
+        return;
+      }
+      try {
+        // Simulate PnL based on trades (since getPnL is not implemented in contract)
+        document.getElementById('pnlStatus').innerText = `PnL: $${dailyPnL.toFixed(2)} (Since 12:00 AM WAT)`;
+      } catch (error) {
+        document.getElementById('pnlStatus').innerText = 'PnL: $0.00 (Since 12:00 AM WAT)';
+        logMessage('Failed to update PnL.');
+      }
+    }
 
-    // Simulate fetching market data
     async function fetchMarketData(token, timeframe) {
+      // Placeholder: Replace with real API data (e.g., QuickSwap or CoinGecko)
       const prices = Array(50).fill().map(() => Math.random() * 100 + 50);
       const volumes = Array(50).fill().map(() => Math.random() * 1000);
       return { prices, volumes };
     }
 
-    // Update market signals
     async function updateSignals() {
       if (!tokenIn || !tokenOut || !contract) return;
       const tbody = document.getElementById("tokenSignals").getElementsByTagName("tbody")[0];
@@ -2203,7 +2252,6 @@ async function updatePnL() {
       document.getElementById("analysisResult").innerText = `Market Analysis: Updated for ${timeframe}`;
     }
 
-    // Calculate technical signals
     function calculateSignals(prices, volumes) {
       const rsi = technicalindicators.RSI.calculate({ values: prices, period: techParams.rsiPeriod })[0] || 0;
       const macdData = technicalindicators.MACD.calculate({
@@ -2235,7 +2283,6 @@ async function updatePnL() {
       return { count: signals, rsi, macd, patterns };
     }
 
-    // Manual buy
     async function manualBuy() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2252,12 +2299,25 @@ async function updatePnL() {
         const minUSDValueOut = web3.utils.toWei("0.9", 'ether');
         const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
-        let tx;
+        let txMethod;
         if (tokenIn === NATIVE_ADDRESS) {
-          tx = await contract.methods.manualNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account, value: amountIn });
+          txMethod = contract.methods.manualNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline);
         } else {
-          tx = await contract.methods.manualTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account });
+          txMethod = contract.methods.manualTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline);
         }
+
+        const gasEstimate = await txMethod.estimateGas({
+          from: account,
+          value: tokenIn === NATIVE_ADDRESS ? amountIn : 0,
+        });
+        if (gasEstimate > 500000) {
+          logMessage('Warning: High gas cost detected (>500k). Consider lowering amount or waiting.');
+        }
+
+        const tx = await txMethod.send({
+          from: account,
+          value: tokenIn === NATIVE_ADDRESS ? amountIn : 0,
+        });
         document.getElementById("buyResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
         logMessage(`Manual buy successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
         dailyPnL += 0.1;
@@ -2268,11 +2328,10 @@ async function updatePnL() {
         updateTransactionLog();
       } catch (error) {
         document.getElementById("buyResult").innerText = 'Result: Failed';
-        logMessage('Manual buy failed. Please check your inputs.');
+        logMessage('Manual buy failed. Check inputs or contract status.');
       }
     }
 
-    // Manual sell
     async function manualSell() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2296,12 +2355,25 @@ async function updatePnL() {
         tokenInDecimals = tokenOutDecimals;
         tokenOutDecimals = tempDecimals;
 
-        let tx;
+        let txMethod;
         if (tokenIn === NATIVE_ADDRESS) {
-          tx = await contract.methods.manualNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account, value: amountIn });
+          txMethod = contract.methods.manualNativeSwap(amountIn, amountOutMin, minUSDValueOut, deadline);
         } else {
-          tx = await contract.methods.manualTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline).send({ from: account });
+          txMethod = contract.methods.manualTokenSwap(amountIn, amountOutMin, minUSDValueOut, deadline);
         }
+
+        const gasEstimate = await txMethod.estimateGas({
+          from: account,
+          value: tokenIn === NATIVE_ADDRESS ? amountIn : 0,
+        });
+        if (gasEstimate > 500000) {
+          logMessage('Warning: High gas cost detected (>500k). Consider lowering amount or waiting.');
+        }
+
+        const tx = await txMethod.send({
+          from: account,
+          value: tokenIn === NATIVE_ADDRESS ? amountIn : 0,
+        });
         document.getElementById("sellResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
         logMessage(`Manual sell successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
         dailyPnL -= 0.05;
@@ -2317,11 +2389,10 @@ async function updatePnL() {
         tokenOutDecimals = await getTokenDecimals(tokenOut);
       } catch (error) {
         document.getElementById("sellResult").innerText = 'Result: Failed';
-        logMessage('Manual sell failed. Please check your inputs.');
+        logMessage('Manual sell failed. Check inputs or contract status.');
       }
     }
 
-    // Toggle auto-trading
     async function toggleAutoTrading() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2341,11 +2412,10 @@ async function updatePnL() {
         updateTransactionLog();
       } catch (error) {
         logMessage('Failed to toggle auto-trading. Please try again.');
-        autoTradingActive = !autoTradingActive; // Revert on failure
+        autoTradingActive = !autoTradingActive;
       }
     }
 
-    // Auto trade
     async function autoTrade(direction) {
       if (!contract) return;
       try {
@@ -2368,11 +2438,10 @@ async function updatePnL() {
         updateNativeBalance();
         updateTransactionLog();
       } catch (error) {
-        logMessage(`Auto ${direction} failed. Please check contract status.`);
+        logMessage(`Auto ${direction} failed. Check contract status or budget.`);
       }
     }
 
-    // Top up contract
     async function topUpContract() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2401,11 +2470,41 @@ async function updatePnL() {
         updateTransactionLog();
       } catch (error) {
         document.getElementById("topUpResult").innerText = 'Result: Failed';
-        logMessage('Top-up failed. Please check your inputs.');
+        logMessage('Top-up failed. Check inputs or balance.');
       }
     }
 
-    // Approve budget
+    async function setBudgetToOnePercent() {
+      if (!contract) {
+        logMessage("Please connect wallet first");
+        return;
+      }
+      const token = document.getElementById("budgetToken").value;
+      if (!token) {
+        logMessage('Please select a budget token');
+        return;
+      }
+      try {
+        let balance;
+        if (token === NATIVE_ADDRESS) {
+          balance = await web3.eth.getBalance(account);
+          balance = parseFloat(web3.utils.fromWei(balance, 'ether'));
+        } else {
+          const tokenContract = new web3.eth.Contract(ERC20_ABI, token);
+          const decimals = await tokenContract.methods.decimals().call();
+          balance = await tokenContract.methods.balanceOf(account).call();
+          balance = parseFloat(balance) / (10 ** decimals);
+        }
+        const onePercent = balance * 0.01;
+        document.getElementById("budgetAmount").value = onePercent.toFixed(4);
+        const usdValue = await getCoinGeckoPrice(TOKENS.find(t => t.address === token)?.coingeckoId || 'matic-network') * onePercent;
+        document.getElementById("budgetValue").innerText = `Value: $${usdValue.toFixed(2)}`;
+        logMessage(`Budget set to 1% of balance: ${onePercent.toFixed(4)} ${TOKENS.find(t => t.address === token)?.name || 'MATIC'}`);
+      } catch (error) {
+        logMessage('Failed to set budget to 1%. Check wallet connection.');
+      }
+    }
+
     async function approveBudget() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2418,6 +2517,20 @@ async function updatePnL() {
         return;
       }
       try {
+        let balance;
+        if (token === NATIVE_ADDRESS) {
+          balance = await web3.eth.getBalance(account);
+          balance = parseFloat(web3.utils.fromWei(balance, 'ether'));
+        } else {
+          const tokenContract = new web3.eth.Contract(ERC20_ABI, token);
+          const decimals = await tokenContract.methods.decimals().call();
+          balance = await tokenContract.methods.balanceOf(account).call();
+          balance = parseFloat(balance) / (10 ** decimals);
+        }
+        if (amount > balance) {
+          logMessage('Budget amount exceeds available balance');
+          return;
+        }
         const decimals = await getTokenDecimals(token);
         const amountWei = (amount * (10 ** decimals)).toString();
         let tx;
@@ -2431,11 +2544,10 @@ async function updatePnL() {
         updateNativeBalance();
         updateTransactionLog();
       } catch (error) {
-        logMessage('Budget approval failed. Please check your inputs.');
+        logMessage('Budget approval failed. Check inputs or balance.');
       }
     }
 
-    // Revoke budget
     async function revokeBudget() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2458,7 +2570,6 @@ async function updatePnL() {
       }
     }
 
-    // Update budget status
     async function updateBudgetStatus() {
       if (!contract) return;
       const token = document.getElementById("budgetToken").value;
@@ -2473,7 +2584,6 @@ async function updatePnL() {
       }
     }
 
-    // Withdraw funds
     async function withdrawFunds() {
       if (!contract) {
         logMessage("Please connect wallet first");
@@ -2488,6 +2598,10 @@ async function updatePnL() {
       try {
         const decimals = await getTokenDecimals(token);
         const amountWei = (amount * (10 ** decimals)).toString();
+        const gasEstimate = await contract.methods.withdraw(token, amountWei).estimateGas({ from: account });
+        if (gasEstimate > 500000) {
+          logMessage('Warning: High gas cost detected (>500k). Consider lowering amount or waiting.');
+        }
         const tx = await contract.methods.withdraw(token, amountWei).send({ from: account });
         document.getElementById("withdrawResult").innerText = `Result: Success - Tx: ${tx.transactionHash}`;
         logMessage(`Withdrawal successful - Tx: <a href="${POLYGONSCAN_URL}${tx.transactionHash}" target="_blank">${tx.transactionHash}</a>`);
@@ -2497,19 +2611,18 @@ async function updatePnL() {
         updateTransactionLog();
       } catch (error) {
         document.getElementById("withdrawResult").innerText = 'Result: Failed';
-        logMessage('Withdrawal failed. Please check your inputs.');
+        logMessage('Withdrawal failed. Check inputs or contract balance.');
       }
     }
 
-    // Update transaction log
     async function updateTransactionLog() {
       if (!contract || !account) return;
       const events = [];
       const eventTypes = ['Swapped', 'ToppedUp', 'Withdrawn', 'BudgetApproved', 'BudgetRevoked', 'AutoTradingToggled', 'PriceFeedsUpdated', 'TokensUpdated'];
       try {
         for (const eventType of eventTypes) {
-          const pastEvents = await contract.getPastEvents(eventType, { fromBlock: 0, toBlock: 'latest', filter: { owner: account } });
-          events.push(...pastEvents);
+          const pastEvents = await contract.getPastEvents(eventType, { fromBlock: 0, toBlock: 'latest' });
+          events.push(...pastEvents.slice(-10)); // Limit to last 10 events for performance
         }
         events.sort((a, b) => b.blockNumber - a.blockNumber || b.transactionIndex - a.transactionIndex);
 
@@ -2573,23 +2686,22 @@ async function updatePnL() {
       }
     }
 
-    // Log message with local timestamp
     function logMessage(message) {
       const logTableBody = document.getElementById("logTable").getElementsByTagName("tbody")[0];
       const timestamp = new Date().toLocaleString();
       const row = `<tr><td>${timestamp}</td><td>Log</td><td>${message}</td><td>-</td></tr>`;
       logTableBody.insertAdjacentHTML('beforeend', row);
       const logTable = document.getElementById("logTable");
+      while (logTableBody.children.length > 50) {
+        logTableBody.removeChild(logTableBody.firstChild);
+      }
       logTable.scrollTop = logTable.scrollHeight;
     }
 
-    // Toggle sidebar
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('hidden');
     }
   </script>
-  <script src="https://unpkg.com/technicalindicators@3.1.0/dist/browser.min.js"></script>
-  <script src="https://unpkg.com/web3@1.7.0/dist/web3.min.js"></script>
 </body>
 </html>
