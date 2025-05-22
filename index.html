@@ -1,0 +1,3482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Advanced Trading Bot for Polygon Network">
+  <title>Trading Bot Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: #222222;
+      padding: 20px;
+      transition: transform 0.3s ease;
+      border-right: 1px solid #333;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .sidebar-toggle {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .main-toggle {
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1001;
+      display: none;
+    }
+
+    .sidebar:not(.hidden) + .main-content .main-toggle {
+      display: none;
+    }
+
+    .sidebar.hidden + .main-content .main-toggle {
+      display: block;
+    }
+
+    .wallet-section, .contract-status, .timeframe-section {
+      margin-bottom: 20px;
+    }
+
+    .wallet-section p, .contract-status p, .timeframe-section p {
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .contract-status .btn {
+      margin-top: 10px;
+    }
+
+    .timeframe-section select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      background: #333;
+      color: #e0e0e0;
+      border: 1px solid #444;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .sidebar.hidden + .main-content {
+      padding-top: 40px;
+    }
+
+    .dashboard-header {
+      margin-bottom: 20px;
+    }
+
+    .dashboard-header h2 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .dashboard-header p {
+      font-size: 14px;
+      color: #a0a0a0;
+    }
+
+    .card {
+      background: #252525;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #a0a0a0;
+    }
+
+    .form-group input, .form-group select {
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background: #333;
+      color: #e0e0e0;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+
+    .form-group p {
+      font-size: 12px;
+      color: #a0a0a0;
+      margin-top: 5px;
+    }
+    
+    .signal-strong {
+  font-weight: bold;
+  font-size: 18px;
+}
+.signal-moderate {
+  font-weight: 600;
+  font-size: 16px;
+}
+.signal-weak {
+  font-weight: normal;
+  font-size: 14px;
+}
+.bullish {
+  color: #28a745;
+}
+.bearish {
+  color: #dc3545;
+}
+.neutral {
+  color: #6c757d;
+}
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-secondary {
+      background-color: #444;
+      color: #e0e0e0;
+    }
+
+    .btn-secondary:hover {
+      background-color: #555;
+    }
+
+    .btn-buy {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .btn-buy:hover {
+      background-color: #218838;
+    }
+
+    .btn-sell {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .btn-sell:hover {
+      background-color: #c82333;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+
+    .btn-success {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background-color: #218838;
+    }
+
+    .btn-toggle {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    .btn-toggle:hover {
+      background-color: #e0a800;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action-buttons p {
+      font-size: 14px;
+      color: #a0a0a0;
+      margin-left: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #333;
+      color: #e0e0e0;
+      font-weight: 600;
+    }
+
+    td {
+      border-bottom: 1px solid #444;
+    }
+
+    tr:hover {
+      background: #2a2a2a;
+    }
+
+    .log-area {
+      max-height: 300px;
+      overflow-y: auto;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #a0a0a0;
+    }
+
+    .log-area a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .log-area a:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #a0a0a0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 100%;
+        transform: translateX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.hidden {
+        transform: translateX(-100%);
+      }
+
+      .main-content {
+        padding: 10px;
+        margin-top: 0;
+        overflow: auto;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .dashboard-header h2 {
+        font-size: 24px;
+      }
+
+      .card h3 {
+        font-size: 18px;
+      }
+
+      th, td {
+        font-size: 12px;
+        padding: 8px;
+      }
+    }
+
+    :focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+
+    [aria-live="polite"] {
+      overflow-anchor: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #333;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+    
+    .btn {
+      
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-auto {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .btn-auto:hover {
+      background-color: #218838;
+    }
+    .btn-auto:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>Trading Bot</h1>
+        <button class="sidebar-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
+      </div>
+      <div class="wallet-section">
+        <button id="connectButton" class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+        <button id="disconnectButton" class="btn btn-secondary" onclick="disconnectWallet()" style="display: none;">Disconnect Wallet</button>
+        <p id="walletStatus">Wallet: Not Connected</p>
+        <p id="nativeBalance">Native Balance: 0 MATIC</p>
+        <p id="pnlStatus">PnL: $0.00 (Since 12:00 AM WAT)</p>
+      </div>
+      <div class="timeframe-section">
+        <label for="timeframe">Timeframe:</label>
+        <select id="timeframe" onchange="setTimeframe()">
+          <option value="1m">1 Minute</option>
+          <option value="5m" selected>5 Minutes</option>
+          <option value="15m">15 Minutes</option>
+          <option value="1h">1 Hour</option>
+        </select>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <button class="main-toggle" aria-label="Toggle Sidebar" onclick="toggleSidebar()">☰</button>
+      <header class="dashboard-header">
+        <h2>Dashboard</h2>
+        <p id="priceStatus">Prices: Loading...</p>
+      </header>
+
+      <section class="card contract-status">
+        <h3>Contract Status</h3>
+        <p id="contractStatus">Contract Status: Not Connected</p>
+        <div class="action-buttons">
+          <button id="pauseButton" class="btn btn-danger" onclick="pauseContract()" style="display: none;">Pause Contract</button>
+          <button id="unpauseButton" class="btn btn-success" onclick="unpauseContract()" style="display: none;">Unpause Contract</button>
+        </div>
+      </section>
+
+      <section class="card current-tokens">
+        <h3>Current Tokens</h3>
+        <p id="currentTokenIn">Token In: Not Set</p>
+        <p id="currentTokenOut">Token Out: Not Set</p>
+      </section>
+
+      <section class="card token-selection">
+        <h3>Token Pair</h3>
+        <div class="form-grid">
+  <div class="form-group">
+    <label for="tokenIn">Token In:</label>
+    <select id="tokenIn" onchange="updateTokenInfo()">
+      <option value="" disabled selected>Select Token</option>
+    </select>
+    <input type="text" id="customTokenIn" placeholder="Custom Token Address" aria-label="Custom Token In Address">
+    <button class="btn btn-secondary" onclick="addCustomToken('tokenIn')">Add Custom Token</button>
+    <p id="tokenInInfo">Balance: 0.0000 | Value: $0.00</p>
+  </div>
+  <div class="form-group">
+    <label for="tokenOut">Token Out:</label>
+    <select id="tokenOut" onchange="updateTokenInfo()">
+      <option value="" disabled selected>Select Token</option>
+    </select>
+    <input type="text" id="customTokenOut" placeholder="Custom Token Address" aria-label="Custom Token Out Address">
+    <button class="btn btn-secondary" onclick="addCustomToken('tokenOut')">Add Custom Token</button>
+    <p id="tokenOutInfo">Balance: 0.0000 | Value: $0.00</p>
+  </div>
+</div>
+        <button class="btn btn-secondary" onclick="setTokens()">Set Tokens</button>
+      </section>
+
+      <section class="card price-feed-selection">
+        <h3>Price Feeds</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="priceFeedIn">Price Feed In:</label>
+            <select id="priceFeedIn">
+              <option value="" disabled selected>Select Price Feed</option>
+            </select>
+            <input type="text" id="customPriceFeedIn" placeholder="Custom Price Feed Address" aria-label="Custom Price Feed In Address">
+            <button class="btn btn-secondary" onclick="addCustomPriceFeed('priceFeedIn')">Add Custom Price Feed</button>
+          </div>
+          <div class="form-group">
+            <label for="priceFeedOut">Price Feed Out:</label>
+            <select id="priceFeedOut">
+              <option value="" disabled selected>Select Price Feed</option>
+            </select>
+            <input type="text" id="customPriceFeedOut" placeholder="Custom Price Feed Address" aria-label="Custom Price Feed Out Address">
+            <button class="btn btn-secondary" onclick="addCustomPriceFeed('priceFeedOut')">Add Custom Price Feed</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="setPriceFeeds()">Set Price Feeds</button>
+      </section>
+
+      <section class="card charts" id="chartsSection" style="display: none;">
+        <h3>Market Charts</h3>
+        <div id="chartContainer">
+          <div id="tokenInChart" style="width: 100%; height: 400px;"></div>
+          <div id="tokenOutChart" style="width: 100%; height: 400px;"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="refreshCharts()">Refresh Charts</button>
+        <button class="btn btn-secondary" onclick="toggleCharts()">Hide Charts</button>
+      </section>
+
+      <section class="card token-charts">
+        <h3>Individual Token Charts</h3>
+        <select id="chartTokenSelect" onchange="displayTokenChart()">
+          <option value="" disabled selected>Select Token for Chart</option>
+        </select>
+        <div id="selectedTokenChart" style="width: 100%; height: 400px;"></div>
+      </section>
+
+      <section class="card trading-parameters">
+        <h3>Trading Parameters</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="profitRange">Profit Range (%):</label>
+            <input type="number" id="profitRange" value="1" min="0" step="0.1" aria-label="Profit Range Percentage">
+          </div>
+          <div class="form-group">
+            <label for="stopLoss">Stop Loss (%):</label>
+            <input type="number" id="stopLoss" value="1" min="0" step="0.1" aria-label="Stop Loss Percentage">
+          </div>
+          <div class="form-group">
+            <label for="slippage">Slippage (%):</label>
+            <input type="number" id="slippage" value="1" min="0" step="0.1" aria-label="Slippage Percentage">
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="setTradingParameters()">Set Parameters</button>
+      </section>
+
+      <section class="card technical-parameters">
+        <h3>Technical Analysis Parameters</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="macdFast">MACD Fast:</label>
+            <input type="number" id="macdFast" value="12" min="1" aria-label="MACD Fast Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('macdFast')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="macdSlow">MACD Slow:</label>
+            <input type="number" id="macdSlow" value="26" min="1" aria-label="MACD Slow Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('macdSlow')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="macdSignal">MACD Signal:</label>
+            <input type="number" id="macdSignal" value="9" min="1" aria-label="MACD Signal Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('macdSignal')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="rsiPeriod">RSI Period:</label>
+            <input type="number" id="rsiPeriod" value="14" min="1" aria-label="RSI Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('rsiPeriod')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="minRsi">Min RSI:</label>
+            <input type="number" id="minRsi" value="30" min="0" max="100" aria-label="Minimum RSI">
+            <button class="btn btn-secondary" onclick="updateTechParam('minRsi')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="maxRsi">Max RSI:</label>
+            <input type="number" id="maxRsi" value="70" min="0" max="100" aria-label="Maximum RSI">
+            <button class="btn btn-secondary" onclick="updateTechParam('maxRsi')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="volumePeriod">Volume Period:</label>
+            <input type="number" id="volumePeriod" value="14" min="1" aria-label="Volume Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('volumePeriod')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="minVolumeSpike">Min Volume Spike:</label>
+            <input type="number" id="minVolumeSpike" value="1.5" min="0" step="0.1" aria-label="Minimum Volume Spike">
+            <button class="btn btn-secondary" onclick="updateTechParam('minVolumeSpike')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="maxVolumeSpike">Max Volume Spike:</label>
+            <input type="number" id="maxVolumeSpike" value="3.0" min="0" step="0.1" aria-label="Maximum Volume Spike">
+            <button class="btn btn-secondary" onclick="updateTechParam('maxVolumeSpike')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="emaPeriod">EMA Period:</label>
+            <input type="number" id="emaPeriod" value="20" min="1" aria-label="EMA Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('emaPeriod')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="bollingerPeriod">Bollinger Period:</label>
+            <input type="number" id="bollingerPeriod" value="20" min="1" aria-label="Bollinger Period">
+            <button class="btn btn-secondary" onclick="updateTechParam('bollingerPeriod')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="bollingerStdDev">Bollinger Std Dev:</label>
+            <input type="number" id="bollingerStdDev" value="2" min="0" step="0.1" aria-label="Bollinger Standard Deviation">
+            <button class="btn btn-secondary" onclick="updateTechParam('bollingerStdDev')">Update</button>
+          </div>
+          <div class="form-group">
+            <label for="minSignals">Minimum Signals:</label>
+            <input type="number" id="minSignals" value="2" min="1" max="7" aria-label="Minimum Signals">
+            <button class="btn btn-secondary" onclick="updateTechParam('minSignals')">Update</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card trading-actions">
+        <h3>Trading Actions</h3>
+        <div class="action-buttons">
+  <div class="form-group">
+    <label for="nativeBuyAmount">Native Buy Amount (MATIC):</label>
+    <input type="number" id="nativeBuyAmount" value="1" min="0" step="0.01" aria-label="Native Buy Amount in MATIC">
+    <label for="nativeAmountOutMin">Min Tokens Out:</label>
+    <input type="number" id="nativeAmountOutMin" value="0" min="0" step="0.01" aria-label="Minimum Tokens Out">
+    <label for="nativeMinUSDValueOut">Min USD Value Out:</label>
+    <input type="number" id="nativeMinUSDValueOut" value="0" min="0" step="0.01" aria-label="Minimum USD Value Out">
+    <label for="nativeDeadline">Deadline (minutes):</label>
+    <input type="number" id="nativeDeadline" value="20" min="1" step="1" aria-label="Transaction Deadline in Minutes">
+  </div>
+  <button class="btn btn-buy" onclick="manualNativeBuy()">Buy (Native)</button>
+  <p id="nativeBuyResult">Result: None</p>
+
+  <div class="form-group">
+    <label for="tokenBuyAmount">Token Buy Amount:</label>
+    <input type="number" id="tokenBuyAmount" value="1" min="0" step="0.01" aria-label="Token Buy Amount">
+    <label for="tokenAmountOutMin">Min Tokens Out:</label>
+    <input type="number" id="tokenAmountOutMin" value="0" min="0" step="0.01" aria-label="Minimum Tokens Out">
+    <label for="tokenMinUSDValueOut">Min USD Value Out:</label>
+    <input type="number" id="tokenMinUSDValueOut" value="0" min="0" step="0.01" aria-label="Minimum USD Value Out">
+    <label for="tokenDeadline">Deadline (minutes):</label>
+    <input type="number" id="tokenDeadline" value="20" min="1" step="1" aria-label="Transaction Deadline in Minutes">
+  </div>
+  <button class="btn btn-buy" onclick="manualTokenBuy()">Buy (Token)</button>
+  <p id="tokenBuyResult">Result: None</p>
+
+          <div class="form-group">
+  <label for="nativeSellAmount">Native Sell Amount (Tokens):</label>
+  <input type="number" id="nativeSellAmount" value="1" min="0" step="0.01" aria-label="Native Sell Amount in Tokens">
+  <label for="nativeSellAmountOutMin">Min MATIC Out:</label>
+  <input type="number" id="nativeSellAmountOutMin" value="0" min="0" step="0.01" aria-label="Minimum MATIC Out">
+  <label for="nativeSellMinUSDValueOut">Min USD Value Out:</label>
+  <input type="number" id="nativeSellMinUSDValueOut" value="0" min="0" step="0.01" aria-label="Minimum USD Value Out">
+  <label for="nativeSellDeadline">Deadline (minutes):</label>
+  <input type="number" id="nativeSellDeadline" value="20" min="1" step="1" aria-label="Transaction Deadline in Minutes">
+</div>
+<button class="btn btn-sell" onclick="manualNativeSell()">Sell (Native)</button>
+<p id="nativeSellResult">Result: None</p>
+
+<div class="form-group">
+  <label for="tokenSellAmount">Token Sell Amount:</label>
+  <input type="number" id="tokenSellAmount" value="1" min="0" step="0.01" aria-label="Token Sell Amount">
+  <label for="tokenSellAmountOutMin">Min Tokens Out:</label>
+  <input type="number" id="tokenSellAmountOutMin" value="0" min="0" step="0.01" aria-label="Minimum Tokens Out">
+  <label for="tokenSellMinUSDValueOut">Min USD Value Out:</label>
+  <input type="number" id="tokenSellMinUSDValueOut" value="0" min="0" step="0.01" aria-label="Minimum USD Value Out">
+  <label for="tokenSellDeadline">Deadline (minutes):</label>
+  <input type="number" id="tokenSellDeadline" value="20" min="1" step="1" aria-label="Transaction Deadline in Minutes">
+</div>
+<button class="btn btn-sell" onclick="manualTokenSell()">Sell (Token)</button>
+<p id="tokenSellResult">Result: None</p>
+
+          <button id="toggleAutoTrading" class="btn btn-toggle" onclick="toggleAutoTrading()">Toggle Auto-Trading (Off)</button>
+          <button class="btn btn-auto" onclick="autoTradeAlternative()">Run Alternative Auto-Trade</button>
+          <p id="autoTradingStatus">Auto-Trading: Off</p>
+        </div>
+      </section>
+
+      <section class="card signals-table">
+  <h3>Market Signals</h3>
+  <table id="tokenSignals">
+    <thead>
+      <tr>
+        <th>Token</th>
+        <th>Final Signal</th>
+        <th>Bullish Signals 💚</th>
+        <th>Bearish Signals ♥️</th>
+        <th>Neutral Signals ⚪</th>
+        <th>Technical Details</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p id="analysisResult" aria-live="polite">Market Analysis: Loading...</p>
+</section>
+
+      <section class="card wallet-balances">
+        <h3>Wallet Balances</h3>
+        <table id="walletBalances">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Balance</th>
+              <th>USD Value</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="card funding-actions">
+  <h3>Funding</h3>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="topUpNativeAmount">Top-Up Native Amount (MATIC):</label>
+      <input type="number" id="topUpNativeAmount" value="0" min="0" step="0.01" aria-label="Top-Up Native Amount">
+      <p id="topUpNativeValue">Value: $0.00</p>
+      <button class="btn btn-secondary" onclick="topUpNative()">Top Up Native</button>
+      <p id="topUpNativeResult">Result: None</p>
+    </div>
+    <div class="form-group">
+      <label for="topUpToken">Top-Up Token:</label>
+      <select id="topUpToken"></select>
+      <label for="topUpTokenAmount">Amount:</label>
+      <input type="number" id="topUpTokenAmount" value="0" min="0" step="0.01" aria-label="Top-Up Token Amount">
+      <p id="topUpTokenValue">Value: $0.00</p>
+      <button class="btn btn-secondary" onclick="topUpToken()">Top Up Token</button>
+      <p id="topUpTokenResult">Result: None</p>
+    </div>
+    <div class="form-group">
+      <label for="nativeBudgetToken">Native Budget Token:</label>
+      <select id="nativeBudgetToken"></select>
+      <label for="nativeBudgetAmount">Amount (MATIC):</label>
+      <input type="number" id="nativeBudgetAmount" value="0" min="0" step="0.01" aria-label="Native Budget Amount">
+      <button class="btn btn-secondary" onclick="setNativeBudgetToOnePercent()">Set to 1%</button>
+      <p id="nativeBudgetValue">Value: $0.00</p>
+      <button class="btn btn-secondary" onclick="approveNativeBudget()">Approve Native Budget</button>
+      <p id="nativeBudgetStatus">Budget: 0 MATIC</p>
+    </div>
+    <div class="form-group">
+      <label for="tokenBudgetToken">Token Budget Token:</label>
+      <select id="tokenBudgetToken"></select>
+      <label for="tokenBudgetAmount">Amount:</label>
+      <input type="number" id="tokenBudgetAmount" value="0" min="0" step="0.01" aria-label="Token Budget Amount">
+      <button class="btn btn-secondary" onclick="setTokenBudgetToOnePercent()">Set to 1%</button>
+      <p id="tokenBudgetValue">Value: $0.00</p>
+      <button class="btn btn-secondary" onclick="approveTokenBudget()">Approve Token Budget</button>
+      <button class="btn btn-danger" onclick="revokeBudget()">Revoke Budget</button>
+      <p id="tokenBudgetStatus">Budget: 0</p>
+    </div>
+    
+    <div class="form-group">
+  <label for="autoNativeBudgetAmount">Auto Native Budget (MATIC):</label>
+  <input type="number" id="autoNativeBudgetAmount" value="0.1" min="0" step="0.01" aria-label="Auto Native Budget">
+  <label for="autoTokenBudgetAmount">Auto Token Budget:</label>
+  <input type="number" id="autoTokenBudgetAmount" value="1" min="0" step="0.01" aria-label="Auto Token Budget">
+  <label for="autoAmountOutMin">Min Amount Out:</label>
+  <input type="number" id="autoAmountOutMin" value="0" min="0" step="0.01" aria-label="Auto Min Amount Out">
+  <label for="autoMinUSDValueOut">Min USD Value Out:</label>
+  <input type="number" id="autoMinUSDValueOut" value="0" min="0" step="0.01" aria-label="Auto Min USD Value Out">
+  <label for="autoDeadline">Deadline (minutes):</label>
+  <input type="number" id="autoDeadline" value="20" min="1" step="1" aria-label="Auto Deadline">
+</div>
+<p id="autoTradeResult">Auto-Trade Result: None</p>
+
+    <div class="form-group">
+      <label for="withdrawToken">Withdraw Token:</label>
+      <select id="withdrawToken"></select>
+      <label for="withdrawAmount">Amount:</label>
+      <input type="number" id="withdrawAmount" value="0" min="0" step="0.01" aria-label="Withdraw Amount">
+      <p id="withdrawValue">Value: $0.00</p>
+      <button class="btn btn-secondary" onclick="withdrawFunds()">Withdraw</button>
+      <p id="withdrawResult">Result: None</p>
+    </div>
+  </div>
+</section>
+
+      <section class="card log-area">
+        <h3>Transaction Logs</h3>
+        <table id="logTable">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Event</th>
+              <th>Details</th>
+              <th>Tx Hash</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/web3@1.7.0/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/technicalindicators@3.1.0/dist/browser.min.js"></script>
+  <script type="text/javascript">
+    // Constants
+    const CONTRACT_ADDRESS = '0x56672b9dde9d6d10cd5dd10fc8579a425c24ac02';
+    const QUICKSWAP_ROUTER = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
+    const NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
+    const POLYGONSCAN_URL = 'https://polygonscan.com/tx/';
+    const PUBLIC_RPC_URL = 'https://polygon-rpc.com';
+    const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+    const POLYGON_CHAIN_ID = '137';
+    const publicWeb3 = new Web3(new Web3.providers.HttpProvider(PUBLIC_RPC_URL));
+
+    // Token list with metadata
+    let TOKENS = [
+      { name: 'USDT', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6, coingeckoId: 'tether', priceFeed: '0x0A6513e40db6EB1b165753AD52E80663aeA50545' },
+      { name: 'USDC', address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', decimals: 6, coingeckoId: 'usd-coin', priceFeed: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7' },
+      { name: 'DAI', address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063', decimals: 18, coingeckoId: 'dai', priceFeed: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D' },
+      { name: 'WMATIC', address: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', decimals: 18, coingeckoId: 'matic-network', priceFeed: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0' },
+      { name: 'POL (NATIVE)', address: NATIVE_ADDRESS, decimals: 18, coingeckoId: 'polygon', priceFeed: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0' },
+      { name: 'ADA', address: '0xE6a991fF0bf2C1a599c7057b7865b03aC15bF4B2', decimals: 18, coingeckoId: 'cardano', priceFeed: '0x882554df528115a743c4537828DA8D5B58e52544' },
+      { name: 'MKR', address: '0x6f7C932e7684666C9fd1d44527765433e01fF61d', decimals: 18, coingeckoId: 'maker', priceFeed: '0xa070427bF5bA5709f70e98b94Cb2F435a242C46C' },
+      { name: 'WETH', address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', decimals: 18, coingeckoId: 'weth', priceFeed: '0xF9680D99D6C9589e2a93a78A04A279e509205945' },
+      { name: 'WBTC', address: '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6', decimals: 8, coingeckoId: 'wrapped-bitcoin', priceFeed: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6' }
+    ];
+
+    // Price feed list
+    let priceFeedsList = [
+      { name: 'USDT / USD', address: '0x0A6513e40db6EB1b165753AD52E80663aeA50545' },
+      { name: 'USDC / USD', address: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7' },
+      { name: 'DAI / USD', address: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D' },
+      { name: 'MATIC / USD', address: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0' },
+      { name: 'ADA / USD', address: '0x882554df528115a743c4537828DA8D5B58e52544' },
+      { name: 'MKR / USD', address: '0xa070427bF5bA5709f70e98b94Cb2F435a242C46C' },
+      { name: 'ETH / USD', address: '0xF9680D99D6C9589e2a93a78A04A279e509205945' },
+      { name: 'WBTC / USD', address: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6' }
+    ];
+
+    // Global variables
+    let web3, account, contract;
+    let isConnected = false;
+    let autoTradingActive = false;
+    let autoTradingInterval;
+    let tokenIn, tokenOut, priceFeedIn, priceFeedOut, tokenInDecimals, tokenOutDecimals;
+    let timeframe = '5m';
+    let tradingParams = { profitRange: 1, stopLoss: 1, slippage: 1 };
+    let techParams = {
+  rsiPeriod: 14,
+  minRsi: 30,
+  maxRsi: 70,
+  macdFast: 12,
+  macdSlow: 26,
+  macdSignal: 9,
+  bollingerPeriod: 20,
+  bollingerStdDev: 2,
+  emaPeriod: 20,
+  stochasticPeriod: 14,
+  stochasticK: 3,
+  stochasticD: 3,
+  volumePeriod: 14,
+  minVolumeSpike: 1.5,
+  maxVolumeSpike: 3.0,
+  atrPeriod: 14,
+  minSignals: 3 // Lowered to allow Moderate signals
+};
+
+// Signal weights
+const SIGNAL_WEIGHTS = {
+  rsi_oversold: 0.8, rsi_overbought: 0.8,
+  macd_bullish: 0.8, macd_bearish: 0.8,
+  bollinger_lower: 0.8, bollinger_upper: 0.8,
+  ema_above: 0.7, ema_below: 0.7,
+  stochastic_oversold: 0.7, stochastic_overbought: 0.7,
+  volume_spike_bullish: 0.5, volume_spike_bearish: 0.5,
+  atr_high: 0.5,
+  double_bottom: 1.0, double_top: 1.0,
+  head_shoulders: 1.0, inverse_head_shoulders: 1.0,
+  triangle_breakout_bullish: 0.8, triangle_breakout_bearish: 0.8,
+  bullish_engulfing: 0.9, bearish_engulfing: 0.9,
+  hammer: 0.9, shooting_star: 0.9,
+  doji: 0.6
+};
+
+    let dailyPnL = 0;
+contract.events.Swapped({}, (error, event) => {
+  if (!error) {
+    dailyPnL += Number(event.returnValues.usdProfit);
+    document.getElementById('pnlStatus').textContent = `PnL: $${dailyPnL.toFixed(2)} (Since 12:00 AM WAT)`;
+  }
+});
+
+contract.events.Swapped({}, (error, event) => {
+  if (error) {
+    console.error('Error on Swapped event:', error);
+    return;
+  }
+  const { tokenIn, amountIn, tokenOut, amountOut, usdProfit } = event.returnValues;
+  addLog('Swap Executed', `Swapped ${web3.utils.fromWei(amountIn)} ${tokenIn} for ${web3.utils.fromWei(amountOut)} ${tokenOut}, Profit: ${usdProfit}`);
+});
+
+    let tokenInChart, tokenOutChart, selectedTokenChart;
+    let logs = [];
+
+    // Contract ABI
+    const CONTRACT_ABI = [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_router",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "_wrappedNative",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnableInvalidOwner",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "OwnableUnauthorizedAccount",
+        "type": "error"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "bool",
+            "name": "enabled",
+            "type": "bool"
+          }
+        ],
+        "name": "AutoTradingToggled",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "BudgetApproved",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          }
+        ],
+        "name": "BudgetRevoked",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "previousOwner",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "Paused",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "priceFeedIn",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "priceFeedOut",
+            "type": "address"
+          }
+        ],
+        "name": "PriceFeedsUpdated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amountOut",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "int256",
+            "name": "usdProfit",
+            "type": "int256"
+          }
+        ],
+        "name": "Swapped",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          }
+        ],
+        "name": "TokensUpdated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "ToppedUp",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "Unpaused",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "Withdrawn",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approveNativeBudget",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approveTokenBudget",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "autoNativeSwap",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "autoTokenSwap",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "pause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "paused",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          }
+        ],
+        "name": "revokeBudget",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "profitRange",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stopLoss",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "slippage",
+            "type": "uint256"
+          }
+        ],
+        "name": "setParameters",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "priceFeedIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "priceFeedOut",
+            "type": "address"
+          }
+        ],
+        "name": "setPriceFeeds",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "macdFast",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "macdSlow",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "macdSignal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "rsiPeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minRsi",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxRsi",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "volumePeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minVolumeSpike",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxVolumeSpike",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "emaPeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bollingerPeriod",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bollingerStdDev",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minSignals",
+            "type": "uint256"
+          }
+        ],
+        "name": "setTechParameters",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "tokenOut",
+            "type": "address"
+          }
+        ],
+        "name": "setTokens",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "swapExactETHForTokens",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "tokenIn",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountIn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amountOutMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minUSDValueOut",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          }
+        ],
+        "name": "swapExactTokensForTokens",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "toggleAutoTrading",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "topUpContract",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "unpause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "withdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    // ERC-20 ABI for token interactions
+    const ERC20_ABI = [
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "name",
+        "outputs": [{ "name": "", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "symbol",
+        "outputs": [{ "name": "", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "decimals",
+        "outputs": [{ "name": "", "type": "uint8" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [{ "name": "_owner", "type": "address" }],
+        "name": "balanceOf",
+        "outputs": [{ "name": "balance", "type": "uint256" }],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          { "name": "_spender", "type": "address" },
+          { "name": "_value", "type": "uint256" }
+        ],
+        "name": "approve",
+        "outputs": [{ "name": "", "type": "bool" }],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+
+    // Utility function to add log entry
+    let lastPeriodicLog = 0;
+const LOG_THROTTLE = 60000; // 1 minute
+
+function addLog(event, details, txHash = '') {
+  // Skip periodic updates if throttled
+  if (event === 'Market Analysis' || event === 'Token Info Updated') {
+    const now = Date.now();
+    if (now - lastPeriodicLog < LOG_THROTTLE) return;
+    lastPeriodicLog = now;
+  }
+
+  const timestamp = new Date().toLocaleString();
+  logs.push({ timestamp, event, details, txHash });
+  if (logs.length > 100) logs.shift(); // Limit to 100 entries
+  updateLogTable();
+}
+
+    // Update transaction log table
+    function updateLogTable() {
+      const tbody = document.getElementById('logTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${log.timestamp}</td>
+          <td>${log.event}</td>
+          <td>${log.details}</td>
+          <td>${log.txHash ? `<a href="${POLYGONSCAN_URL}${log.txHash}" target="_blank">${log.txHash.substring(0, 10)}...</a>` : ''}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Initialize dropdowns
+    function initializeDropdowns() {
+  const dropdowns = ['topUpToken', 'nativeBudgetToken', 'tokenBudgetToken', 'withdrawToken', 'chartTokenSelect'];
+  dropdowns.forEach(id => {
+    const select = document.getElementById(id);
+    select.innerHTML = '<option value="" disabled selected>Select Token</option>';
+    TOKENS.forEach(token => {
+      const option = document.createElement('option');
+      option.value = token.address;
+      option.textContent = token.name;
+      select.appendChild(option);
+    });
+  });
+
+  const tokenInSelect = document.getElementById('tokenIn');
+  const tokenOutSelect = document.getElementById('tokenOut');
+
+  // Function to update dropdowns based on trading mode
+  function updateTokenDropdowns(mode) {
+    tokenInSelect.innerHTML = '<option value="" disabled selected>Select Token</option>';
+    tokenOutSelect.innerHTML = '<option value="" disabled selected>Select Token</option>';
+
+    if (mode === 'nativeBuy' || mode === 'nativeSell') {
+      // tokenIn: Only POL (NATIVE)
+      const nativeOption = document.createElement('option');
+      nativeOption.value = NATIVE_ADDRESS;
+      nativeOption.textContent = 'POL (NATIVE)';
+      tokenInSelect.appendChild(nativeOption);
+      // tokenOut: Exclude POL (NATIVE)
+      TOKENS.filter(token => token.address !== NATIVE_ADDRESS).forEach(token => {
+        const option = document.createElement('option');
+        option.value = token.address;
+        option.textContent = token.name;
+        tokenOutSelect.appendChild(option);
+      });
+    } else if (mode === 'tokenBuy' || mode === 'tokenSell') {
+      // Both tokenIn and tokenOut: Exclude POL (NATIVE)
+      TOKENS.filter(token => token.address !== NATIVE_ADDRESS).forEach(token => {
+        const inOption = document.createElement('option');
+        inOption.value = token.address;
+        inOption.textContent = token.name;
+        tokenInSelect.appendChild(inOption);
+        const outOption = document.createElement('option');
+        outOption.value = token.address;
+        outOption.textContent = token.name;
+        tokenOutSelect.appendChild(outOption);
+      });
+    }
+  }
+
+  // Initialize with tokenBuy mode (default)
+  updateTokenDropdowns('tokenBuy');
+
+  // Update dropdowns when trading mode changes
+  document.querySelectorAll('.btn-buy, .btn-sell').forEach(button => {
+    button.addEventListener('click', () => {
+      if (button.textContent.includes('Buy (Native)') || button.textContent.includes('Sell (Native)')) {
+        updateTokenDropdowns('nativeBuy'); // Same restrictions for buy and sell
+      } else if (button.textContent.includes('Buy (Token)') || button.textContent.includes('Sell (Token)')) {
+        updateTokenDropdowns('tokenBuy');
+      }
+    });
+  });
+
+  const priceFeedDropdowns = ['priceFeedIn', 'priceFeedOut'];
+  priceFeedDropdowns.forEach(id => {
+    const select = document.getElementById(id);
+    select.innerHTML = '<option value="" disabled selected>Select Price Feed</option>';
+    priceFeedsList.forEach(feed => {
+      const option = document.createElement('option');
+      option.value = feed.address;
+      option.textContent = feed.name;
+      select.appendChild(option);
+    });
+  });
+}
+
+    // Update token information and balances
+    async function updateTokenInfo() {
+  if (!isConnected || !account) return;
+
+  const tokenInSelect = document.getElementById('tokenIn');
+  const tokenOutSelect = document.getElementById('tokenOut');
+  tokenIn = tokenInSelect.value;
+  tokenOut = tokenOutSelect.value;
+
+  if (tokenIn === tokenOut && tokenIn !== '') {
+    alert('Token In and Token Out cannot be the same.');
+    tokenInSelect.value = '';
+    tokenOut = '';
+    return;
+  }
+
+  const tokenInData = TOKENS.find(t => t.address === tokenIn);
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  tokenInDecimals = tokenInData ? tokenInData.decimals : 18;
+  tokenOutDecimals = tokenOutData ? tokenOutData.decimals : 18;
+
+  const tokenInInfo = document.getElementById('tokenInInfo');
+  const tokenOutInfo = document.getElementById('tokenOutInfo');
+
+  let tokenInBalance = 0, tokenOutBalance = 0;
+  if (tokenIn) {
+    tokenInBalance = tokenIn === NATIVE_ADDRESS
+      ? Number(web3.utils.fromWei(await web3.eth.getBalance(account), 'ether'))
+      : Number(web3.utils.fromWei(await getTokenBalance(tokenIn, account), getWeiUnit(tokenInDecimals)));
+  }
+  if (tokenOut) {
+    tokenOutBalance = tokenOut === NATIVE_ADDRESS
+      ? Number(web3.utils.fromWei(await web3.eth.getBalance(account), 'ether'))
+      : Number(web3.utils.fromWei(await getTokenBalance(tokenOut, account), getWeiUnit(tokenOutDecimals)));
+  }
+  tokenInInfo.textContent = `Balance: ${tokenInBalance.toFixed(4)} | Value: $${(tokenInBalance * (TOKENS.find(t => t.address === tokenIn)?.price || 0)).toFixed(2)}`;
+  tokenOutInfo.textContent = `Balance: ${tokenOutBalance.toFixed(4)} | Value: $${(tokenOutBalance * (TOKENS.find(t => t.address === tokenOut)?.price || 0)).toFixed(2)}`;
+}
+
+    // Get token balance
+    async function getTokenBalance(tokenAddress, account) {
+      if (tokenAddress === NATIVE_ADDRESS) {
+        const balance = await web3.eth.getBalance(account);
+        return Number(web3.utils.fromWei(balance, 'ether'));
+      } else {
+        const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
+        const balance = await tokenContract.methods.balanceOf(account).call();
+        const token = TOKENS.find(t => t.address === tokenAddress);
+        return Number(web3.utils.fromWei(balance, getWeiUnit(token.decimals)));
+      }
+    }
+
+    // Get token price from CoinGecko
+    async function getTokenPrice(coingeckoId) {
+      try {
+        const response = await fetch(`${COINGECKO_API}/simple/price?ids=${coingeckoId}&vs_currencies=usd`);
+        const data = await response.json();
+        return data[coingeckoId]?.usd || 0;
+      } catch (error) {
+        console.error('Error fetching price:', error);
+        return 0;
+      }
+    }
+
+    // Convert decimals to Wei unit
+    function getWeiUnit(decimals) {
+  const units = {
+    18: 'ether', // 10^18 wei (e.g., MATIC, most ERC-20 tokens)
+    9: 'gwei',  // 10^9 wei (e.g., some tokens)
+    6: 'mwei'   // 10^6 wei (e.g., USDC, USDT)
+  };
+
+  if (!units[decimals]) {
+    console.warn(`No direct Wei unit for ${decimals} decimals. Falling back to 'ether' with manual adjustment.`);
+    // For unsupported decimals, manual conversion may be needed
+    return 'ether'; // Fallback to ether; adjust in calling function if necessary
+  }
+
+  return units[decimals];
+}
+
+    // Connect wallet
+    async function connectWallet() {
+      if (typeof window.ethereum === 'undefined') {
+        alert('Please install MetaMask to use this dapp.');
+        return;
+      }
+
+      try {
+        web3 = new Web3(window.ethereum);
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        account = accounts[0];
+        const chainId = await web3.eth.getChainId();
+        if (chainId !== parseInt(POLYGON_CHAIN_ID)) {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: web3.utils.toHex(POLYGON_CHAIN_ID) }]
+          });
+        }
+
+        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+        contract.events.TokensUpdated({}, (error, event) => {
+  if (error) {
+    console.error('Error on TokensUpdated event:', error);
+    return;
+  }
+  tokenIn = event.returnValues.tokenIn;
+  tokenOut = event.returnValues.tokenOut;
+  updateTokenInfo();
+  addLog('Tokens Updated', `Token In: ${tokenIn}, Token Out: ${tokenOut}`);
+});
+        isConnected = true;
+
+        document.getElementById('connectButton').style.display = 'none';
+        document.getElementById('disconnectButton').style.display = 'block';
+        document.getElementById('walletStatus').textContent = `Wallet: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+        document.getElementById('contractStatus').textContent = 'Contract Status: Connected';
+
+        updateNativeBalance();
+        updateTokenInfo();
+        updateContractStatus();
+        addLog('Wallet Connected', `Connected to ${account}`);
+
+        // Listen for account and network changes
+        window.ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length === 0) {
+            disconnectWallet();
+          } else {
+            account = accounts[0];
+            updateWalletStatus();
+            updateNativeBalance();
+            updateTokenInfo();
+          }
+        });
+
+        window.ethereum.on('chainChanged', (chainId) => {
+          if (chainId !== web3.utils.toHex(POLYGON_CHAIN_ID)) {
+            disconnectWallet();
+            alert('Please switch to the Polygon network.');
+          }
+        });
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+        addLog('Error', 'Failed to connect wallet');
+        alert('Failed to connect wallet. Please try again.');
+      }
+    }
+
+    // Disconnect wallet
+    function disconnectWallet() {
+      isConnected = false;
+      account = null;
+      web3 = null;
+      contract = null;
+
+      document.getElementById('connectButton').style.display = 'block';
+      document.getElementById('disconnectButton').style.display = 'none';
+      document.getElementById('walletStatus').textContent = 'Wallet: Not Connected';
+      document.getElementById('nativeBalance').textContent = 'Native Balance: 0 MATIC';
+      document.getElementById('contractStatus').textContent = 'Contract Status: Not Connected';
+      document.getElementById('tokenInInfo').textContent = 'Balance: 0.0000 | Value: $0.00';
+      document.getElementById('tokenOutInfo').textContent = 'Balance: 0.0000 | Value: $0.00';
+      document.getElementById('currentTokenIn').textContent = 'Token In: Not Set';
+      document.getElementById('currentTokenOut').textContent = 'Token Out: Not Set';
+
+      if (autoTradingActive) {
+        toggleAutoTrading();
+      }
+
+      addLog('Wallet Disconnected', 'Wallet disconnected');
+    }
+
+    // Update wallet status
+    function updateWalletStatus() {
+      if (isConnected && account) {
+        document.getElementById('walletStatus').textContent = `Wallet: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+      } else {
+        document.getElementById('walletStatus').textContent = 'Wallet: Not Connected';
+      }
+    }
+
+    // Update native balance
+    async function updateNativeBalance() {
+      if (!isConnected || !account) return;
+      try {
+        const balance = await web3.eth.getBalance(account);
+        const matic = Number(web3.utils.fromWei(balance, 'ether')).toFixed(4);
+        document.getElementById('nativeBalance').textContent = `Native Balance: ${matic} MATIC`;
+      } catch (error) {
+        console.error('Error updating native balance:', error);
+        addLog('Error', 'Failed to update native balance');
+      }
+    }
+
+    // Update contract status
+    async function updateContractStatus() {
+      if (!contract) return;
+      try {
+        const isPaused = await contract.methods.paused().call();
+        document.getElementById('contractStatus').textContent = `Contract Status: ${isPaused ? 'Paused' : 'Active'}`;
+        document.getElementById('pauseButton').style.display = isPaused ? 'none' : 'block';
+        document.getElementById('unpauseButton').style.display = isPaused ? 'block' : 'none';
+      } catch (error) {
+        console.error('Error updating contract status:', error);
+        addLog('Error', 'Failed to update contract status');
+      }
+    }
+
+    // Add custom token
+    async function addCustomToken(field) {
+  const input = document.getElementById(`custom${field.charAt(0).toUpperCase() + field.slice(1)}`);
+  const address = input.value.trim();
+
+  if (!web3.utils.isAddress(address)) {
+    alert('Invalid token address.');
+    return;
+  }
+
+  if (address.toLowerCase() === NATIVE_ADDRESS.toLowerCase()) {
+    alert('Cannot add POL (NATIVE) as a custom token.');
+    return;
+  }
+
+  if (TOKENS.find(t => t.address.toLowerCase() === address.toLowerCase())) {
+    alert('Token already exists.');
+    return;
+  }
+
+  try {
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, address);
+    const symbol = await tokenContract.methods.symbol().call();
+    const decimals = await tokenContract.methods.decimals().call();
+
+    const newToken = {
+      name: symbol,
+      address: address,
+      decimals: Number(decimals),
+      coingeckoId: symbol.toLowerCase(),
+      priceFeed: ''
+    };
+
+    TOKENS.push(newToken);
+    initializeDropdowns();
+    document.getElementById(field).value = address;
+    input.value = '';
+    updateTokenInfo();
+    addLog('Custom Token Added', `Added ${symbol} (${address})`);
+  } catch (error) {
+    console.error('Error adding custom token:', error);
+    addLog('Error', 'Failed to add custom token');
+    alert('Failed to add custom token. Please check the address.');
+  }
+
+    // Add custom price feed
+    function addCustomPriceFeed(field) {
+      const input = document.getElementById(`custom${field.charAt(0).toUpperCase() + field.slice(1)}`);
+      const address = input.value.trim();
+
+      if (!web3.utils.isAddress(address)) {
+        alert('Invalid price feed address.');
+        return;
+      }
+
+      if (priceFeedsList.find(f => f.address.toLowerCase() === address.toLowerCase())) {
+        alert('Price feed already exists.');
+        return;
+      }
+
+      const newFeed = {
+        name: `Custom Feed (${address.substring(0, 6)})`,
+        address: address
+      };
+
+      priceFeedsList.push(newFeed);
+      initializeDropdowns();
+      document.getElementById(field).value = address;
+      input.value = '';
+      addLog('Custom Price Feed Added', `Added ${newFeed.name} (${address})`);
+    }
+
+    // Set tokens
+    async function setTokens() {
+  const tokenInSelect = document.getElementById('tokenIn').value;
+  const tokenOutSelect = document.getElementById('tokenOut').value;
+
+  if (!contract || !tokenInSelect || !tokenOutSelect) {
+    alert('Please select both Token In and Token Out.');
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.setTokens(tokenInSelect, tokenOutSelect).send({ from: account });
+    addLog('Tokens Set', `Set Token In: ${tokenInSelect}, Token Out: ${tokenOutSelect}`, tx.transactionHash);
+  } catch (error) {
+    console.error('Error setting tokens:', error);
+    addLog('Error', 'Failed to set tokens');
+    alert('Failed to set tokens.');
+  }
+}
+
+    // Set price feeds
+    async function setPriceFeeds() {
+      const priceFeedInSelect = document.getElementById('priceFeedIn');
+      const priceFeedOutSelect = document.getElementById('priceFeedOut');
+      priceFeedIn = priceFeedInSelect.value;
+      priceFeedOut = priceFeedOutSelect.value;
+
+      if (!contract || !priceFeedIn || !priceFeedOut) {
+        alert('Please select both Price Feed In and Price Feed Out.');
+        return;
+      }
+
+      try {
+        const tx = await contract.methods.setPriceFeeds(priceFeedIn, priceFeedOut).send({ from: account });
+        addLog('Price Feeds Set', `Set Price Feed In: ${priceFeedIn}, Price Feed Out: ${priceFeedOut}`, tx.transactionHash);
+      } catch (error) {
+        console.error('Error setting price feeds:', error);
+        addLog('Error', 'Failed to set price feeds');
+        alert('Failed to set price feeds.');
+      }
+    }
+
+    // Set timeframe
+    function setTimeframe() {
+      timeframe = document.getElementById('timeframe').value;
+      refreshCharts();
+      addLog('Timeframe Set', `Timeframe set to ${timeframe}`);
+    }
+
+    // Set trading parameters
+    async function setTradingParameters() {
+      const profitRange = Number(document.getElementById('profitRange').value);
+      const stopLoss = Number(document.getElementById('stopLoss').value);
+      const slippage = Number(document.getElementById('slippage').value);
+
+      if (profitRange < 0 || stopLoss < 0 || slippage < 0) {
+        alert('Parameters cannot be negative.');
+        return;
+      }
+
+      tradingParams = { profitRange, stopLoss, slippage };
+
+      try {
+        const tx = await contract.methods.setParameters(
+          Math.floor(profitRange * 100),
+          Math.floor(stopLoss * 100),
+          Math.floor(slippage * 100)
+        ).send({ from: account });
+        addLog('Trading Parameters Set', `Profit Range: ${profitRange}%, Stop Loss: ${stopLoss}%, Slippage: ${slippage}%`, tx.transactionHash);
+      } catch (error) {
+        console.error('Error setting trading parameters:', error);
+        addLog('Error', 'Failed to set trading parameters');
+        alert('Failed to set trading parameters.');
+      }
+    }
+
+    // Update technical parameter
+    async function updateTechParam(param) {
+      const value = Number(document.getElementById(param).value);
+      if (value < 0 || (['minRsi', 'maxRsi'].includes(param) && value > 100) || (param === 'minSignals' && value > 7)) {
+        alert('Invalid parameter value.');
+        return;
+      }
+
+      techParams[param] = value;
+
+      try {
+        const tx = await contract.methods.setTechParameters(
+          techParams.macdFast,
+          techParams.macdSlow,
+          techParams.macdSignal,
+          techParams.rsiPeriod,
+          techParams.minRsi,
+          techParams.maxRsi,
+          techParams.volumePeriod,
+          Math.floor(techParams.minVolumeSpike * 100),
+          Math.floor(techParams.maxVolumeSpike * 100),
+          techParams.emaPeriod,
+          techParams.bollingerPeriod,
+          Math.floor(techParams.bollingerStdDev * 100),
+          techParams.minSignals
+        ).send({ from: account });
+        addLog('Technical Parameter Updated', `${param}: ${value}`, tx.transactionHash);
+      } catch (error) {
+        console.error('Error updating technical parameter:', error);
+        addLog('Error', `Failed to update ${param}`);
+        alert(`Failed to update ${param}.`);
+      }
+    }
+
+    // Manual Native Buy
+    async function manualNativeBuy() {
+  if (!contract || !tokenIn || !tokenOut) {
+    alert('Please set Token In and Token Out.');
+    return;
+  }
+
+  if (tokenIn !== NATIVE_ADDRESS) {
+    alert('Token In must be POL (NATIVE) for native buy.');
+    return;
+  }
+
+  const amount = Number(document.getElementById('nativeBuyAmount').value);
+  let amountOutMin = Number(document.getElementById('nativeBuyAmountOutMin').value);
+  let minUSDValueOut = Number(document.getElementById('nativeBuyMinUSDValueOut').value);
+  let deadline = Math.floor(Date.now() / 1000) + (Number(document.getElementById('nativeBuyDeadline').value) * 60);
+
+  if (amount <= 0 || amountOutMin < 0 || minUSDValueOut < 0 || deadline <= Math.floor(Date.now() / 1000)) {
+    alert('Invalid input parameters.');
+    return;
+  }
+
+  const balance = await web3.eth.getBalance(account);
+  const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+
+  // Handle amountOutMin conversion
+  let amountOutMinWei;
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  const decimals = tokenOutData ? tokenOutData.decimals : 18;
+  const unit = getWeiUnit(decimals);
+  if (unit === 'ether' && decimals !== 18) {
+    // Manual adjustment for non-standard decimals
+    const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - decimals));
+    amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+    console.warn(`Adjusted amountOutMin for ${decimals} decimals: ${amountOutMinWei}`);
+  } else {
+    amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), unit);
+  }
+
+  const minUSDValueOutWei = web3.utils.toWei(minUSDValueOut.toString(), 'ether');
+
+  if (Number(balance) < Number(amountWei)) {
+    alert('Insufficient MATIC balance.');
+    return;
+  }
+
+  const { finalSignal, signalStrength } = await analyzeMarket();
+  if (!['Strong', 'Moderate'].includes(signalStrength) || !finalSignal.includes('Buy')) {
+    alert(`No strong buy signal detected. Current signal: ${finalSignal}`);
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.swapExactETHForTokens(
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account, value: amountWei });
+
+    const tokenOutSymbol = TOKENS.find(t => t.address === tokenOut)?.name || 'Unknown';
+    document.getElementById('nativeBuyResult').textContent = `Result: Success - ${finalSignal} - Bought ${tokenOutSymbol} with MATIC`;
+    addLog('Native Buy', `${finalSignal}: Bought ${tokenOutSymbol} with ${amount} MATIC`, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error executing native buy:', error);
+    document.getElementById('nativeBuyResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to execute native buy');
+    alert('Failed to execute native buy.');
+  }
+}
+
+// Manual Token Buy
+async function manualTokenBuy() {
+  if (!contract || !tokenIn || !tokenOut) {
+    alert('Please set Token In and Token Out.');
+    return;
+  }
+
+  const amount = Number(document.getElementById('tokenBuyAmount').value);
+  let amountOutMin = Number(document.getElementById('tokenBuyAmountOutMin').value);
+  let minUSDValueOut = Number(document.getElementById('tokenBuyMinUSDValueOut').value);
+  let deadline = Math.floor(Date.now() / 1000) + (Number(document.getElementById('tokenBuyDeadline').value) * 60);
+
+  if (amount <= 0 || amountOutMin < 0 || minUSDValueOut < 0 || deadline <= Math.floor(Date.now() / 1000)) {
+    alert('Invalid input parameters.');
+    return;
+  }
+
+  const tokenInData = TOKENS.find(t => t.address === tokenIn);
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  if (!tokenInData || !tokenOutData) {
+    alert('Invalid Token In or Token Out.');
+    return;
+  }
+
+  // Handle amount conversion
+  let amountWei;
+  const inUnit = getWeiUnit(tokenInData.decimals);
+  if (inUnit === 'ether' && tokenInData.decimals !== 18) {
+    const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - tokenInData.decimals));
+    amountWei = web3.utils.toBN(web3.utils.toWei(amount.toString(), 'ether')).div(factor).toString();
+    console.warn(`Adjusted amount for ${tokenInData.decimals} decimals: ${amountWei}`);
+  } else {
+    amountWei = web3.utils.toWei(amount.toString(), inUnit);
+  }
+
+  // Handle amountOutMin conversion
+  let amountOutMinWei;
+  const outUnit = getWeiUnit(tokenOutData.decimals);
+  if (outUnit === 'ether' && tokenOutData.decimals !== 18) {
+    const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - tokenOutData.decimals));
+    amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+    console.warn(`Adjusted amountOutMin for ${tokenOutData.decimals} decimals: ${amountOutMinWei}`);
+  } else {
+    amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), outUnit);
+  }
+
+  const minUSDValueOutWei = web3.utils.toWei(minUSDValueOut.toString(), 'ether');
+
+  const balance = await getTokenBalance(tokenIn, account);
+  if (balance < amount) {
+    alert(`Insufficient ${tokenInData.name} balance.`);
+    return;
+  }
+
+  const { finalSignal, signalStrength } = await analyzeMarket();
+  if (!['Strong', 'Moderate'].includes(signalStrength) || !finalSignal.includes('Buy')) {
+    alert(`No strong buy signal detected. Current signal: ${finalSignal}`);
+    return;
+  }
+
+  try {
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenIn);
+    const allowance = await tokenContract.methods.allowance(account, CONTRACT_ADDRESS).call();
+    if (Number(allowance) < Number(amountWei)) {
+      await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({ from: account });
+      addLog('Token Approval', `Approved ${amount} ${tokenInData.name} for buying`);
+    }
+
+    const tx = await contract.methods.swapExactTokensForTokens(
+      tokenIn,
+      amountWei,
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account });
+
+    document.getElementById('tokenBuyResult').textContent = `Result: Success - ${finalSignal} - Bought ${tokenOutData.name} with ${tokenInData.name}`;
+    addLog('Token Buy', `${finalSignal}: Bought ${tokenOutData.name} with ${amount} ${tokenInData.name}`, tx.transactionHash);
+    updateTokenInfo();
+  } catch (error) {
+    console.error('Error executing token buy:', error);
+    document.getElementById('tokenBuyResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to execute token buy');
+    alert('Failed to execute token buy.');
+  }
+}
+
+// Manual Native Sell
+async function manualNativeSell() {
+  if (!contract || !tokenIn || !tokenOut) {
+    alert('Please set Token In and Token Out.');
+    return;
+  }
+
+  if (tokenIn !== NATIVE_ADDRESS) {
+    alert('Token In must be POL (NATIVE) for native sell.');
+    return;
+  }
+
+  const amount = Number(document.getElementById('nativeSellAmount').value);
+  let amountOutMin = Number(document.getElementById('nativeSellAmountOutMin').value);
+  let minUSDValueOut = Number(document.getElementById('nativeSellMinUSDValueOut').value);
+  let deadline = Math.floor(Date.now() / 1000) + (Number(document.getElementById('nativeSellDeadline').value) * 60);
+
+  if (amount <= 0 || amountOutMin < 0 || minUSDValueOut < 0 || deadline <= Math.floor(Date.now() / 1000)) {
+    alert('Invalid input parameters.');
+    return;
+  }
+
+  const balance = await web3.eth.getBalance(account);
+  const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+
+  // Handle amountOutMin conversion
+  let amountOutMinWei;
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  const decimals = tokenOutData ? tokenOutData.decimals : 18;
+  const unit = getWeiUnit(decimals);
+  if (unit === 'ether' && decimals !== 18) {
+    // Manual adjustment for non-standard decimals
+    const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - decimals));
+    amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+    console.warn(`Adjusted amountOutMin for ${decimals} decimals: ${amountOutMinWei}`);
+  } else {
+    amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), unit);
+  }
+
+  const minUSDValueOutWei = web3.utils.toWei(minUSDValueOut.toString(), 'ether');
+
+  if (Number(balance) < Number(amountWei)) {
+    alert('Insufficient MATIC balance.');
+    return;
+  }
+
+  const { finalSignal, signalStrength } = await analyzeMarket();
+  if (!['Strong', 'Moderate'].includes(signalStrength) || !finalSignal.includes('Sell')) {
+    alert(`No strong sell signal detected. Current signal: ${finalSignal}`);
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.manualNativeSwap(
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account, value: amountWei });
+
+    const tokenOutSymbol = TOKENS.find(t => t.address === tokenOut)?.name || 'Unknown';
+    document.getElementById('nativeSellResult').textContent = `Result: Success - ${finalSignal} - Sold MATIC for ${tokenOutSymbol}`;
+    addLog('Native Sell', `${finalSignal}: Sold ${amount} MATIC for ${tokenOutSymbol}`, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error executing native sell:', error);
+    document.getElementById('nativeSellResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to execute native sell');
+    alert('Failed to execute native sell.');
+  }
+}
+
+// Manual Token Sell
+async function manualTokenSell() {
+  if (!contract || !tokenIn || !tokenOut) {
+    alert('Please set Token In and Token Out.');
+    return;
+  }
+
+  const amount = Number(document.getElementById('tokenSellAmount').value);
+  let amountOutMin = Number(document.getElementById('tokenSellAmountOutMin').value);
+  let minUSDValueOut = Number(document.getElementById('tokenSellMinUSDValueOut').value);
+  let deadline = Math.floor(Date.now() / 1000) + (Number(document.getElementById('tokenSellDeadline').value) * 60);
+
+  if (amount <= 0 || amountOutMin < 0 || minUSDValueOut < 0 || deadline <= Math.floor(Date.now() / 1000)) {
+    alert('Invalid input parameters.');
+    return;
+  }
+
+  const tokenInData = TOKENS.find(t => t.address === tokenIn);
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  if (!tokenInData || !tokenOutData) {
+    alert('Invalid Token In or Token Out.');
+    return;
+  }
+
+  const amountWei = web3.utils.toWei(amount.toString(), getWeiUnit(tokenInData.decimals));
+  let amountOutMinWei;
+  const outUnit = getWeiUnit(tokenOutData.decimals);
+  if (outUnit === 'ether' && tokenOutData.decimals !== 18) {
+    const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - tokenOutData.decimals));
+    amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+    console.warn(`Adjusted amountOutMin for ${tokenOutData.decimals} decimals: ${amountOutMinWei}`);
+  } else {
+    amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), outUnit);
+  }
+  const minUSDValueOutWei = web3.utils.toWei(minUSDValueOut.toString(), 'ether');
+
+  const balance = await getTokenBalance(tokenIn, account);
+  if (balance < amount) {
+    alert(`Insufficient ${tokenInData.name} balance.`);
+    return;
+  }
+
+  const { finalSignal, signalStrength } = await analyzeMarket();
+  if (!['Strong', 'Moderate'].includes(signalStrength) || !finalSignal.includes('Sell')) {
+    alert(`No strong sell signal detected. Current signal: ${finalSignal}`);
+    return;
+  }
+
+  try {
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenIn);
+    const allowance = await tokenContract.methods.allowance(account, CONTRACT_ADDRESS).call();
+    if (Number(allowance) < Number(amountWei)) {
+      await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({ from: account });
+      addLog('Token Approval', `Approved ${amount} ${tokenInData.name} for selling`);
+    }
+
+    const tx = await contract.methods.manualTokenSwap(
+      tokenIn,
+      amountWei,
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account });
+
+    document.getElementById('tokenSellResult').textContent = `Result: Success - ${finalSignal} - Sold ${tokenInData.name} for ${tokenOutData.name}`;
+    addLog('Token Sell', `${finalSignal}: Sold ${amount} ${tokenInData.name} for ${tokenOutData.name}`, tx.transactionHash);
+    updateTokenInfo();
+  } catch (error) {
+    console.error('Error executing token sell:', error);
+    document.getElementById('tokenSellResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to execute token sell');
+    alert('Failed to execute token sell.');
+  }
+}
+// Toggle auto-trading
+async function toggleAutoTrading() {
+  if (!contract) {
+    alert('Please connect wallet and set tokens.');
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.toggleAutoTrading().send({ from: account });
+    autoTradingActive = !autoTradingActive;
+    const button = document.getElementById('toggleAutoTrading');
+    const status = document.getElementById('autoTradingStatus');
+    button.textContent = `Toggle Auto-Trading (${autoTradingActive ? 'On' : 'Off'})`;
+    status.textContent = `Auto-Trading: ${autoTradingActive ? 'On' : 'Off'}`;
+
+    if (autoTradingActive) {
+      autoTradingInterval = setInterval(autoTrade, 60000); // Run every minute
+    } else {
+      clearInterval(autoTradingInterval);
+    }
+
+    addLog('Auto-Trading Toggled', `Auto-Trading: ${autoTradingActive ? 'Enabled' : 'Disabled'}`, tx.transactionHash);
+  } catch (error) {
+    console.error('Error toggling auto-trading:', error);
+    addLog('Error', 'Failed to toggle auto-trading');
+    alert('Failed to toggle auto-trading.');
+  }
+}
+
+// Auto-trade logic
+async function autoTradeNative(signal, amountOutMinWei, minUSDValueOutWei, deadline) {
+  try {
+    const amount = Number(document.getElementById('autoNativeBudgetAmount').value);
+    if (amount <= 0) {
+      addLog('Error', 'Invalid native budget amount');
+      return;
+    }
+
+    const balance = await web3.eth.getBalance(account);
+    const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+    if (Number(balance) < Number(amountWei)) {
+      addLog('Error', 'Insufficient MATIC balance for auto-trade');
+      return;
+    }
+
+    const tx = await contract.methods.autoNativeSwap(
+      amountWei,
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account, value: amountWei });
+
+    const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+    const tokenOutSymbol = tokenOutData?.name || 'Unknown';
+    const logMessage = `${signal}: Swapped ${amount} MATIC for ${tokenOutSymbol}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Success - ${logMessage}`;
+    addLog('Auto Trade', logMessage, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error in autoTradeNative:', error);
+    const errorMessage = `Auto-trade native failed: ${error.message}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Failed - ${error.message}`;
+    addLog('Error', errorMessage);
+  }
+}
+
+async function autoTradeToken(signal, amountOutMinWei, minUSDValueOutWei, deadline) {
+  try {
+    const amount = Number(document.getElementById('autoTokenBudgetAmount').value);
+    if (amount <= 0) {
+      addLog('Error', 'Invalid token budget amount');
+      return;
+    }
+
+    const tokenInData = TOKENS.find(t => t.address === tokenIn);
+    if (!tokenInData) {
+      addLog('Error', 'Invalid Token In');
+      return;
+    }
+
+    let amountWei;
+    const inUnit = getWeiUnit(tokenInData.decimals);
+    if (inUnit === 'ether' && tokenInData.decimals !== 18) {
+      const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - tokenInData.decimals));
+      amountWei = web3.utils.toBN(web3.utils.toWei(amount.toString(), 'ether')).div(factor).toString();
+      console.warn(`Adjusted amount for ${tokenInData.decimals} decimals: ${amountWei}`);
+    } else {
+      amountWei = web3.utils.toWei(amount.toString(), inUnit);
+    }
+
+    const balance = await getTokenBalance(tokenIn, account);
+    if (balance < amount) {
+      addLog('Error', `Insufficient ${tokenInData.name} balance for auto-trade`);
+      return;
+    }
+
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenIn);
+    const allowance = await tokenContract.methods.allowance(account, CONTRACT_ADDRESS).call();
+    if (Number(allowance) < Number(amountWei)) {
+      await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({ from: account });
+      addLog('Token Approval', `Approved ${amount} ${tokenInData.name} for auto-trade`);
+    }
+
+    const tx = await contract.methods.autoTokenSwap(
+      amountWei,
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account });
+
+    const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+    const tokenOutSymbol = tokenOutData?.name || 'Unknown';
+    const logMessage = `${signal}: Swapped ${amount} ${tokenInData.name} for ${tokenOutSymbol}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Success - ${logMessage}`;
+    addLog('Auto Trade', logMessage, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error in autoTradeToken:', error);
+    const errorMessage = `Auto-trade token failed: ${error.message}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Failed - ${error.message}`;
+    addLog('Error', errorMessage);
+  }
+}
+
+async function autoTrade() {
+  if (!autoTradingActive || !tokenIn || !tokenOut) return;
+
+  try {
+    const { signalStrength, finalSignal } = await analyzeMarket();
+    if (!['Strong', 'Moderate'].includes(signalStrength)) return;
+
+    if (!finalSignal.includes('Buy') && !finalSignal.includes('Sell')) return;
+
+    const amountOutMin = Number(document.getElementById('autoAmountOutMin').value);
+    const minUSDValueOut = Number(document.getElementById('autoMinUSDValueOut').value);
+    const deadline = Math.floor(Date.now() / 1000) + (Number(document.getElementById('autoDeadline').value) * 60);
+
+    if (amountOutMin < 0 || minUSDValueOut < 0 || deadline <= Math.floor(Date.now() / 1000)) {
+      addLog('Error', 'Invalid auto-trade parameters');
+      return;
+    }
+
+    const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+    const outDecimals = tokenOutData ? tokenOutData.decimals : 18;
+    let amountOutMinWei;
+    const outUnit = getWeiUnit(outDecimals);
+    if (outUnit === 'ether' && outDecimals !== 18) {
+      const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - outDecimals));
+      amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+      console.warn(`Adjusted amountOutMin for ${outDecimals} decimals: ${amountOutMinWei}`);
+    } else {
+      amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), outUnit);
+    }
+    const minUSDValueOutWei = web3.utils.toWei(minUSDValueOut.toString(), 'ether');
+
+    if (tokenIn === NATIVE_ADDRESS) {
+      await autoTradeNative(finalSignal, amountOutMinWei, minUSDValueOutWei, deadline);
+    } else {
+      await autoTradeToken(finalSignal, amountOutMinWei, minUSDValueOutWei, deadline);
+    }
+  } catch (error) {
+    console.error('Error in autoTrade:', error);
+    const errorMessage = `Auto-trade failed: ${error.message}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Failed - ${error.message}`;
+    addLog('Error', errorMessage);
+  }
+}
+
+async function autoNativeAlternative(signal) {
+  try {
+    const amount = Number(document.getElementById('autoNativeBudgetAmount').value);
+    let amountOutMin = Number(document.getElementById('autoAmountOutMin').value);
+
+    if (amount <= 0) {
+      addLog('Error', 'Invalid native budget amount');
+      return;
+    }
+
+    const balance = await web3.eth.getBalance(account);
+    const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+
+    let amountOutMinWei;
+    const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+    const decimals = tokenOutData ? tokenOutData.decimals : 18;
+    const unit = getWeiUnit(decimals);
+    if (unit === 'ether' && decimals !== 18) {
+      const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - decimals));
+      amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+      console.warn(`Adjusted amountOutMin for ${decimals} decimals: ${amountOutMinWei}`);
+    } else {
+      amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), unit);
+    }
+
+    const minUSDValueOutWei = web3.utils.toWei('0', 'ether');
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+    if (Number(balance) < Number(amountWei)) {
+      addLog('Error', 'Insufficient MATIC balance for auto-trade');
+      return;
+    }
+
+    const tx = await contract.methods.swapExactETHForTokens(
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account, value: amountWei });
+
+    const tokenOutSymbol = tokenOutData?.name || 'Unknown';
+    const logMessage = `${signal}: ${signal.includes('Buy') ? 'Bought' : 'Sold'} ${tokenOutSymbol} with ${amount} MATIC`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Success - ${logMessage}`;
+    addLog('Auto Trade', logMessage, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error in autoNativeAlternative:', error);
+    const errorMessage = `Auto-trade native alternative failed: ${error.message}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Failed - ${error.message}`;
+    addLog('Error', errorMessage);
+  }
+}
+
+async function autoTokenAlternative(signal) {
+  try {
+    const amount = Number(document.getElementById('autoTokenBudgetAmount').value);
+    let amountOutMin = Number(document.getElementById('autoAmountOutMin').value);
+
+    if (amount <= 0) {
+      addLog('Error', 'Invalid token budget amount');
+      return;
+    }
+
+    const tokenInData = TOKENS.find(t => t.address === tokenIn);
+    const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+    if (!tokenInData || !tokenOutData) {
+      addLog('Error', 'Invalid Token In or Token Out');
+      return;
+    }
+
+    let amountWei;
+    const inUnit = getWeiUnit(tokenInData.decimals);
+    if (inUnit === 'ether' && tokenInData.decimals !== 18) {
+      const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - tokenInData.decimals));
+      amountWei = web3.utils.toBN(web3.utils.toWei(amount.toString(), 'ether')).div(factor).toString();
+      console.warn(`Adjusted amount for ${tokenInData.decimals} decimals: ${amountWei}`);
+    } else {
+      amountWei = web3.utils.toWei(amount.toString(), inUnit);
+    }
+
+    let amountOutMinWei;
+    const outUnit = getWeiUnit(tokenOutData.decimals);
+    if (outUnit === 'ether' && tokenOutData.decimals !== 18) {
+      const factor = web3.utils.toBN(10).pow(web3.utils.toBN(18 - tokenOutData.decimals));
+      amountOutMinWei = web3.utils.toBN(web3.utils.toWei(amountOutMin.toString(), 'ether')).div(factor).toString();
+      console.warn(`Adjusted amountOutMin for ${tokenOutData.decimals}: ${amountOutMinWei}`);
+    } else {
+      amountOutMinWei = web3.utils.toWei(amountOutMin.toString(), outUnit);
+    }
+
+    const minUSDValueOutWei = web3.utils.toWei('0', 'ether');
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+    const balance = await getTokenBalance(tokenIn, account);
+    if (balance < amount) {
+      addLog('Error', `Insufficient ${tokenInData.name} balance for auto-trade`);
+      return;
+    }
+
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenIn);
+    const allowance = await tokenContract.methods.allowance(account, CONTRACT_ADDRESS).call();
+    if (Number(allowance) < Number(amountWei)) {
+      await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({ from: account });
+      addLog('Token Approval', `Approved ${amount} ${tokenInData.name} for auto-trade`);
+    }
+
+    const tx = await contract.methods.swapExactTokensForTokens(
+      tokenIn,
+      amountWei,
+      amountOutMinWei,
+      minUSDValueOutWei,
+      deadline
+    ).send({ from: account });
+
+    const logMessage = `${signal}: ${signal.includes('Buy') ? 'Bought' : 'Sold'} ${tokenOutData.name} with ${amount} ${tokenInData.name}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Success - ${logMessage}`;
+    addLog('Auto Trade', logMessage, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error in autoTokenAlternative:', error);
+    const errorMessage = `Auto-trade token alternative failed: ${error.message}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Failed - ${error.message}`;
+    addLog('Error', errorMessage);
+  }
+}
+
+async function autoTradeAlternative() {
+  if (!autoTradingActive || !tokenIn || !tokenOut) return;
+
+  try {
+    const { signalStrength, finalSignal } = await analyzeMarket();
+    if (!['Strong', 'Moderate'].includes(signalStrength)) return;
+
+    if (!finalSignal.includes('Buy') && !finalSignal.includes('Sell')) return;
+
+    if (tokenIn === NATIVE_ADDRESS) {
+      await autoNativeAlternative(finalSignal);
+    } else {
+      await autoTokenAlternative(finalSignal);
+    }
+  } catch (error) {
+    console.error('Error in autoTradeAlternative:', error);
+    const errorMessage = `Auto-trade alternative failed: ${error.message}`;
+    document.getElementById('autoTradeResult').textContent = `Auto-Trade Result: Failed - ${error.message}`;
+    addLog('Error', errorMessage);
+  }
+}
+
+// Approve Native Nudget
+async function approveNativeBudget() {
+  const amount = Number(document.getElementById('nativeBudgetAmount').value);
+  if (amount <= 0) {
+    alert('Amount must be greater than 0.');
+    return;
+  }
+
+  const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+  const balance = await web3.eth.getBalance(account);
+  if (Number(balance) < Number(amountWei)) {
+    alert('Insufficient MATIC balance.');
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.approveNativeBudget(amountWei).send({ from: account, value: amountWei });
+    document.getElementById('nativeBudgetStatus').textContent = `Budget: ${amount} MATIC`;
+    addLog('Native Budget Approved', `Approved ${amount} MATIC`, tx.transactionHash);
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error approving native budget:', error);
+    addLog('Error', 'Failed to approve native budget');
+    alert('Failed to approve native budget.');
+  }
+}
+
+// Approve Token Budget
+async function approveTokenBudget() {
+  const tokenAddress = document.getElementById('tokenBudgetToken').value;
+  const amount = Number(document.getElementById('tokenBudgetAmount').value);
+  if (!tokenAddress || amount <= 0) {
+    alert('Please select a token and enter a valid amount.');
+    return;
+  }
+
+  const tokenData = TOKENS.find(t => t.address === tokenAddress);
+  if (!tokenData) {
+    alert('Invalid token.');
+    return;
+  }
+
+  const amountWei = web3.utils.toWei(amount.toString(), getWeiUnit(tokenData.decimals));
+  const balance = await getTokenBalance(tokenAddress, account);
+  if (balance < amount) {
+    alert(`Insufficient ${tokenData.name} balance.`);
+    return;
+  }
+
+  try {
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
+    await tokenContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({ from: account });
+    const tx = await contract.methods.approveTokenBudget(tokenAddress, amountWei).send({ from: account });
+    document.getElementById('tokenBudgetStatus').textContent = `Budget: ${amount} ${tokenData.name}`;
+    addLog('Token Budget Approved', `Approved ${amount} ${tokenData.name}`, tx.transactionHash);
+    updateTokenInfo();
+  } catch (error) {
+    console.error('Error approving token budget:', error);
+    addLog('Error', 'Failed to approve token budget');
+    alert('Failed to approve token budget.');
+  }
+}
+
+// Revoke budget
+async function revokeBudget() {
+  const tokenAddress = document.getElementById('tokenBudgetToken').value;
+  if (!tokenAddress) {
+    alert('Please select a token.');
+    return;
+  }
+
+  const tokenData = TOKENS.find(t => t.address === tokenAddress);
+  if (!tokenData) {
+    alert('Invalid token.');
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.revokeBudget(tokenAddress).send({ from: account });
+    document.getElementById('tokenBudgetStatus').textContent = `Budget: 0 ${tokenData.name}`;
+    addLog('Budget Revoked', `Revoked budget for ${tokenData.name}`, tx.transactionHash);
+  } catch (error) {
+    console.error('Error revoking budget:', error);
+    addLog('Error', 'Failed to revoke budget');
+    alert('Failed to revoke budget.');
+  }
+}
+
+// Top Up Native
+async function topUpNative() {
+  const amount = Number(document.getElementById('topUpNativeAmount').value);
+  if (amount <= 0) {
+    alert('Please enter a valid amount.');
+    return;
+  }
+
+  const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+  const balance = await web3.eth.getBalance(account);
+  if (Number(balance) < Number(amountWei)) {
+    alert('Insufficient MATIC balance.');
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.topUpNative().send({ from: account, value: amountWei });
+
+    document.getElementById('topUpNativeResult').textContent = `Result: Success - Topped up ${amount} MATIC`;
+    addLog('Top Up Native', `Topped up ${amount} MATIC`, tx.transactionHash);
+    updateTokenInfo();
+    updateNativeBalance();
+  } catch (error) {
+    console.error('Error topping up native:', error);
+    document.getElementById('topUpNativeResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to top up native');
+    alert('Failed to top up native.');
+  }
+}
+
+// Top Up Token
+async function topUpToken() {
+  const tokenAddress = document.getElementById('topUpToken').value;
+  const amount = Number(document.getElementById('topUpTokenAmount').value);
+  if (!tokenAddress || amount <= 0) {
+    alert('Please select a token and enter a valid amount.');
+    return;
+  }
+
+  const tokenData = TOKENS.find(t => t.address === tokenAddress);
+  if (!tokenData) {
+    alert('Invalid token.');
+    return;
+  }
+
+  const amountWei = web3.utils.toWei(amount.toString(), getWeiUnit(tokenData.decimals));
+  const balance = await getTokenBalance(tokenAddress, account);
+  if (balance < amount) {
+    alert(`Insufficient ${tokenData.name} balance.`);
+    return;
+  }
+
+  try {
+    const tx = await contract.methods.topUpToken(
+      tokenAddress,
+      amountWei
+    ).send({ from: account });
+
+    document.getElementById('topUpTokenResult').textContent = `Result: Success - Topped up ${amount} ${tokenData.name}`;
+    addLog('Top Up Token', `Topped up ${amount} ${tokenData.name}`, tx.transactionHash);
+    updateTokenInfo();
+  } catch (error) {
+    console.error('Error topping up token:', error);
+    document.getElementById('topUpTokenResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to top up token');
+    alert('Failed to top up token.');
+  }
+}
+
+// Withdraw funds
+async function withdrawFunds() {
+  const tokenAddress = document.getElementById('withdrawToken').value;
+  const amount = Number(document.getElementById('withdrawAmount').value);
+  if (!tokenAddress || amount <= 0) {
+    alert('Please select a token and enter a valid amount.');
+    return;
+  }
+
+  const tokenData = TOKENS.find(t => t.address === tokenAddress);
+  if (!tokenData) {
+    alert('Invalid token.');
+    return;
+  }
+
+  const amountWei = web3.utils.toWei(amount.toString(), getWeiUnit(tokenData.decimals));
+
+  try {
+    const tx = await contract.methods.withdraw(tokenAddress, amountWei).send({ from: account });
+    document.getElementById('withdrawResult').textContent = `Result: Success - Withdrew ${amount} ${tokenData.name}`;
+    addLog('Withdraw', `Withdrew ${amount} ${tokenData.name}`, tx.transactionHash);
+    updateTokenInfo();
+    if (tokenAddress === NATIVE_ADDRESS) updateNativeBalance();
+  } catch (error) {
+    console.error('Error withdrawing funds:', error);
+    document.getElementById('withdrawResult').textContent = `Result: Failed - ${error.message}`;
+    addLog('Error', 'Failed to withdraw funds');
+    alert('Failed to withdraw funds.');
+  }
+}
+
+// Set native budget to 1% of balance
+async function setNativeBudgetToOnePercent() {
+  if (!isConnected || !account) {
+    alert('Please connect wallet.');
+    return;
+  }
+
+  try {
+    const balance = await web3.eth.getBalance(account);
+    const onePercent = Number(web3.utils.fromWei(balance, 'ether')) * 0.01;
+    document.getElementById('nativeBudgetAmount').value = onePercent.toFixed(4);
+    document.getElementById('nativeBudgetValue').textContent = `Value: $${(onePercent * await getTokenPrice('polygon')).toFixed(2)}`;
+  } catch (error) {
+    console.error('Error setting native budget to 1%:', error);
+    addLog('Error', 'Failed to set native budget to 1%');
+  }
+}
+
+// Set token budget to 1% of balance
+async function setTokenBudgetToOnePercent() {
+  const tokenAddress = document.getElementById('tokenBudgetToken').value;
+  if (!tokenAddress) {
+    alert('Please select a token.');
+    return;
+  }
+
+  const tokenData = TOKENS.find(t => t.address === tokenAddress);
+  if (!tokenData) {
+    alert('Invalid token.');
+    return;
+  }
+
+  try {
+    const balance = await getTokenBalance(tokenAddress, account);
+    const onePercent = balance * 0.01;
+    document.getElementById('tokenBudgetAmount').value = onePercent.toFixed(4);
+    document.getElementById('tokenBudgetValue').textContent = `Value: $${(onePercent * await getTokenPrice(tokenData.coingeckoId)).toFixed(2)}`;
+  } catch (error) {
+    console.error('Error setting token budget to 1%:', error);
+    addLog('Error', 'Failed to set token budget to 1%');
+  }
+}
+
+// Pause contract
+async function pauseContract() {
+  if (!contract) return;
+
+  try {
+    const tx = await contract.methods.pause().send({ from: account });
+    updateContractStatus();
+    addLog('Contract Paused', 'Contract paused', tx.transactionHash);
+  } catch (error) {
+    console.error('Error pausing contract:', error);
+    addLog('Error', 'Failed to pause contract');
+    alert('Failed to pause contract.');
+  }
+}
+
+// Unpause contract
+async function unpauseContract() {
+  if (!contract) return;
+
+  try {
+    const tx = await contract.methods.unpause().send({ from: account });
+    updateContractStatus();
+    addLog('Contract Unpaused', 'Contract unpaused', tx.transactionHash);
+  } catch (error) {
+    console.error('Error unpausing contract:', error);
+    addLog('Error', 'Failed to unpause contract');
+    alert('Failed to unpause contract.');
+  }
+}
+
+// Update wallet balances
+async function updateWalletBalances() {
+  if (!isConnected || !account) return;
+
+  const tbody = document.getElementById('walletBalances').querySelector('tbody');
+  tbody.innerHTML = '';
+
+  for (const token of TOKENS) {
+    try {
+      const balance = await getTokenBalance(token.address, account);
+      const price = await getTokenPrice(token.coingeckoId);
+      const value = (balance * price).toFixed(2);
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${token.name}</td>
+        <td>${balance.toFixed(4)}</td>
+        <td>$${value}</td>
+      `;
+      tbody.appendChild(row);
+    } catch (error) {
+      console.error(`Error updating balance for ${token.name}:`, error);
+    }
+  }
+}
+
+// Initialize charts
+function initializeCharts() {
+  const tokenInChartContainer = document.getElementById('tokenInChart');
+  const tokenOutChartContainer = document.getElementById('tokenOutChart');
+  const selectedTokenChartContainer = document.getElementById('selectedTokenChart');
+
+  tokenInChart = LightweightCharts.createChart(tokenInChartContainer, {
+    width: tokenInChartContainer.clientWidth,
+    height: 400,
+    layout: { background: { color: '#252525' }, textColor: '#e0e0e0' },
+    grid: { vertLines: { color: '#444' }, horzLines: { color: '#444' } },
+    timeScale: { timeVisible: true, secondsVisible: false },
+    rightPriceScale: { borderColor: '#444' },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+  });
+
+  tokenOutChart = LightweightCharts.createChart(tokenOutChartContainer, {
+    width: tokenOutChartContainer.clientWidth,
+    height: 400,
+    layout: { background: { color: '#252525' }, textColor: '#e0e0e0' },
+    grid: { vertLines: { color: '#444' }, horzLines: { color: '#444' } },
+    timeScale: { timeVisible: true, secondsVisible: false },
+    rightPriceScale: { borderColor: '#444' },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+  });
+
+  selectedTokenChart = LightweightCharts.createChart(selectedTokenChartContainer, {
+    width: selectedTokenChartContainer.clientWidth,
+    height: 400,
+    layout: { background: { color: '#252525' }, textColor: '#e0e0e0' },
+    grid: { vertLines: { color: '#444' }, horzLines: { color: '#444' } },
+    timeScale: { timeVisible: true, secondsVisible: false },
+    rightPriceScale: { borderColor: '#444' },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+  });
+
+  window.addEventListener('resize', () => {
+    tokenInChart.resize(tokenInChartContainer.clientWidth, 400);
+    tokenOutChart.resize(tokenOutChartContainer.clientWidth, 400);
+    selectedTokenChart.resize(selectedTokenChartContainer.clientWidth, 400);
+  });
+}
+
+// Refresh charts
+async function refreshCharts() {
+  if (!tokenIn || !tokenOut) return;
+
+  const tokenInData = TOKENS.find(t => t.address === tokenIn);
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  if (!tokenInData || !tokenOutData) return;
+
+  try {
+    const tokenInSeries = tokenInChart.addCandlestickSeries();
+    const tokenOutSeries = tokenOutChart.addCandlestickSeries();
+
+    const tokenInPriceData = await fetchPriceData(tokenInData.coingeckoId, timeframe);
+    const tokenOutPriceData = await fetchPriceData(tokenOutData.coingeckoId, timeframe);
+
+    tokenInSeries.setData(tokenInPriceData);
+    tokenOutSeries.setData(tokenOutPriceData);
+
+    document.getElementById('chartsSection').style.display = 'block';
+  } catch (error) {
+    console.error('Error refreshing charts:', error);
+    addLog('Error', 'Failed to refresh charts');
+  }
+}
+
+// Fetch price data
+async function fetchPriceData(coingeckoId, timeframe) {
+  try {
+    const days = timeframe === '1h' ? 7 : 1; // Use 7 days for 1h timeframe
+    const interval = {
+      '1m': 'minute',
+      '5m': 'minute',
+      '15m': 'minute',
+      '1h': 'hourly'
+    }[timeframe] || 'minute';
+
+    const response = await fetch(`${COINGECKO_API}/coins/${coingeckoId}/market_chart?vs_currency=usd&days=${days}&interval=${interval}`);
+    const data = await response.json();
+    if (!data.prices || data.prices.length === 0) {
+      throw new Error('No price data returned from CoinGecko');
+    }
+
+    return data.prices.map(([timestamp, price], i) => {
+      const prevPrice = i > 0 ? data.prices[i - 1][1] : price;
+      return {
+        time: Math.floor(timestamp / 1000),
+        open: prevPrice,
+        high: Math.max(price, prevPrice) * 1.005,
+        low: Math.min(price, prevPrice) * 0.995,
+        close: price,
+        volume: data.volumes?.[i]?.[1] || 1000 // Realistic fallback volume
+      };
+    });
+  } catch (error) {
+    console.error(`Error fetching price data for ${coingeckoId}:`, error);
+    addLog('Error', `Failed to fetch price data for ${coingeckoId}`);
+    return [];
+  }
+}
+
+async function refreshCharts() {
+  if (!tokenIn || !tokenOut) return;
+
+  const tokenInData = TOKENS.find(t => t.address === tokenIn);
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  if (!tokenInData || !tokenOutData) return;
+
+  try {
+    // Clear existing series
+    tokenInChart.removeSeries(tokenInChart.getSeries()?.[0]);
+    tokenOutChart.removeSeries(tokenOutChart.getSeries()?.[0]);
+
+    const tokenInSeries = tokenInChart.addCandlestickSeries({
+      upColor: '#28a745',
+      downColor: '#dc3545',
+      borderVisible: false,
+      wickUpColor: '#28a745',
+      wickDownColor: '#dc3545'
+    });
+    const tokenOutSeries = tokenOutChart.addCandlestickSeries({
+      upColor: '#28a745',
+      downColor: '#dc3545',
+      borderVisible: false,
+      wickUpColor: '#28a745',
+      wickDownColor: '#dc3545'
+    });
+
+    const tokenInPriceData = await fetchPriceData(tokenInData.coingeckoId, timeframe);
+    const tokenOutPriceData = await fetchPriceData(tokenOutData.coingeckoId, timeframe);
+
+    if (tokenInPriceData.length > 0) {
+      tokenInSeries.setData(tokenInPriceData);
+    } else {
+      addLog('Warning', `No chart data for ${tokenInData.name}`);
+    }
+
+    if (tokenOutPriceData.length > 0) {
+      tokenOutSeries.setData(tokenOutPriceData);
+    } else {
+      addLog('Warning', `No chart data for ${tokenOutData.name}`);
+    }
+
+    document.getElementById('chartsSection').style.display = 'block';
+  } catch (error) {
+    console.error('Error refreshing charts:', error);
+    addLog('Error', 'Failed to refresh charts');
+  }
+}
+
+// Display selected token chart
+async function displayTokenChart() {
+  const tokenAddress = document.getElementById('chartTokenSelect').value;
+  if (!tokenAddress) return;
+
+  const tokenData = TOKENS.find(t => t.address === tokenAddress);
+  if (!tokenData) return;
+
+  try {
+    const series = selectedTokenChart.addCandlestickSeries();
+    const priceData = await fetchPriceData(tokenData.coingeckoId, timeframe);
+    series.setData(priceData);
+  } catch (error) {
+    console.error('Error displaying token chart:', error);
+    addLog('Error', 'Failed to display token chart');
+  }
+}
+
+// Toggle charts visibility
+function toggleCharts() {
+  const chartsSection = document.getElementById('chartsSection');
+  const isHidden = chartsSection.style.display === 'none';
+  chartsSection.style.display = isHidden ? 'block' : 'none';
+  addLog('Charts Toggled', `Charts ${isHidden ? 'Shown' : 'Hidden'}`);
+}
+
+// Analyze market signals
+async function analyzeMarket() {
+  if (!tokenIn || !tokenOut) return [];
+
+  const tokenOutData = TOKENS.find(t => t.address === tokenOut);
+  if (!tokenOutData) return [];
+
+  try {
+    const priceData = await fetchPriceData(tokenOutData.coingeckoId, timeframe);
+    if (priceData.length < 50) return []; // Ensure enough data
+
+    const prices = priceData.map(d => d.close);
+    const highs = priceData.map(d => d.high);
+    const lows = priceData.map(d => d.low);
+    const opens = priceData.map(d => d.open);
+    const volumes = priceData.map(d => d.volume || 1); // Fallback volume
+    const signals = [];
+    const signalDetails = { bullish: [], bearish: [], neutral: [] };
+
+    // RSI
+    const rsi = technicalindicators.RSI.calculate({ period: techParams.rsiPeriod, values: prices });
+    const lastRsi = rsi[rsi.length - 1];
+    if (lastRsi <= techParams.minRsi) {
+      signals.push('rsi_oversold');
+      signalDetails.bullish.push('RSI Oversold 💚');
+    }
+    if (lastRsi >= techParams.maxRsi) {
+      signals.push('rsi_overbought');
+      signalDetails.bearish.push('RSI Overbought ♥️');
+    }
+
+    // MACD
+    const macd = technicalindicators.MACD.calculate({
+      fastPeriod: techParams.macdFast,
+      slowPeriod: techParams.macdSlow,
+      signalPeriod: techParams.macdSignal,
+      values: prices
+    });
+    const lastMacd = macd[macd.length - 1];
+    if (lastMacd.MACD > lastMacd.signal) {
+      signals.push('macd_bullish');
+      signalDetails.bullish.push('MACD Bullish 💚');
+    }
+    if (lastMacd.MACD < lastMacd.signal) {
+      signals.push('macd_bearish');
+      signalDetails.bearish.push('MACD Bearish ♥️');
+    }
+
+    // Bollinger Bands
+    const bollinger = technicalindicators.BollingerBands.calculate({
+      period: techParams.bollingerPeriod,
+      stdDev: techParams.bollingerStdDev,
+      values: prices
+    });
+    const lastBollinger = bollinger[bollinger.length - 1];
+    const lastPrice = prices[prices.length - 1];
+    if (lastPrice < lastBollinger.lower) {
+      signals.push('bollinger_lower');
+      signalDetails.bullish.push('Bollinger Lower Band 💚');
+    }
+    if (lastPrice > lastBollinger.upper) {
+      signals.push('bollinger_upper');
+      signalDetails.bearish.push('Bollinger Upper Band ♥️');
+    }
+
+    // EMA
+    const ema = technicalindicators.EMA.calculate({ period: techParams.emaPeriod, values: prices });
+    const lastEma = ema[ema.length - 1];
+    if (lastPrice > lastEma) {
+      signals.push('ema_above');
+      signalDetails.bullish.push('Price Above EMA 💚');
+    }
+    if (lastPrice < lastEma) {
+      signals.push('ema_below');
+      signalDetails.bearish.push('Price Below EMA ♥️');
+    }
+
+    // Stochastic Oscillator
+    const stochastic = technicalindicators.Stochastic.calculate({
+      high: highs,
+      low: lows,
+      close: prices,
+      period: techParams.stochasticPeriod,
+      signalPeriod: techParams.stochasticD
+    });
+    const lastStochastic = stochastic[stochastic.length - 1];
+    if (lastStochastic.k < 20) {
+      signals.push('stochastic_oversold');
+      signalDetails.bullish.push('Stochastic Oversold 💚');
+    }
+    if (lastStochastic.k > 80) {
+      signals.push('stochastic_overbought');
+      signalDetails.bearish.push('Stochastic Overbought ♥️');
+    }
+
+    // Volume Oscillator
+    const volumeAvg = volumes.slice(-techParams.volumePeriod).reduce((a, b) => a + b, 0) / techParams.volumePeriod;
+    const lastVolume = volumes[volumes.length - 1];
+    if (lastVolume > volumeAvg * techParams.minVolumeSpike) {
+      const priceChange = lastPrice - prices[prices.length - 2];
+      if (priceChange > 0) {
+        signals.push('volume_spike_bullish');
+        signalDetails.bullish.push('Volume Spike Bullish 💚');
+      } else {
+        signals.push('volume_spike_bearish');
+        signalDetails.bearish.push('Volume Spike Bearish ♥️');
+      }
+    }
+
+    // ATR
+    const atr = technicalindicators.ATR.calculate({
+      high: highs,
+      low: lows,
+      close: prices,
+      period: techParams.atrPeriod
+    });
+    const lastAtr = atr[atr.length - 1];
+    const avgAtr = atr.slice(-10).reduce((a, b) => a + b, 0) / 10;
+    if (lastAtr > avgAtr * 1.5) {
+      signals.push('atr_high');
+      signalDetails.neutral.push('High Volatility (ATR) ⚪');
+    }
+
+    // Chart Patterns (Simplified Detection)
+    const detectDoubleBottom = () => {
+      const recentLows = lows.slice(-20).map((l, i) => ({ value: l, index: i }));
+      const sortedLows = recentLows.sort((a, b) => a.value - b.value).slice(0, 2);
+      if (sortedLows[1].value / sortedLows[0].value < 1.05 && Math.abs(sortedLows[1].index - sortedLows[0].index) > 5) {
+        return true;
+      }
+      return false;
+    };
+    const detectDoubleTop = () => {
+      const recentHighs = highs.slice(-20).map((h, i) => ({ value: h, index: i }));
+      const sortedHighs = recentHighs.sort((a, b) => b.value - a.value).slice(0, 2);
+      if (sortedHighs[0].value / sortedHighs[1].value < 1.05 && Math.abs(sortedHighs[1].index - sortedHighs[0].index) > 5) {
+        return true;
+      }
+      return false;
+    };
+
+    if (detectDoubleBottom()) {
+      signals.push('double_bottom');
+      signalDetails.bullish.push('Double Bottom 💚');
+    }
+    if (detectDoubleTop()) {
+      signals.push('double_top');
+      signalDetails.bearish.push('Double Top ♥️');
+    }
+
+    // Candlestick Patterns
+    const lastCandle = priceData[priceData.length - 1];
+    const prevCandle = priceData[priceData.length - 2];
+    const isBullishEngulfing = prevCandle.close < prevCandle.open && 
+                              lastCandle.close > lastCandle.open && 
+                              lastCandle.close > prevCandle.open && 
+                              lastCandle.open < prevCandle.close;
+    const isBearishEngulfing = prevCandle.close > prevCandle.open && 
+                              lastCandle.close < lastCandle.open && 
+                              lastCandle.close < prevCandle.open && 
+                              lastCandle.open > prevCandle.close;
+    const isDoji = Math.abs(lastCandle.open - lastCandle.close) / lastCandle.close < 0.01;
+    const isHammer = lastCandle.close > lastCandle.open && 
+                     (lastCandle.open - lastCandle.low) > 2 * (lastCandle.close - lastCandle.open) && 
+                     (lastCandle.high - lastCandle.close) < 0.1 * (lastCandle.close - lastCandle.open);
+    const isShootingStar = lastCandle.close < lastCandle.open && 
+                          (lastCandle.high - lastCandle.open) > 2 * (lastCandle.open - lastCandle.close) && 
+                          (lastCandle.close - lastCandle.low) < 0.1 * (lastCandle.open - lastCandle.close);
+
+    if (isBullishEngulfing) {
+      signals.push('bullish_engulfing');
+      signalDetails.bullish.push('Bullish Engulfing 💚');
+    }
+    if (isBearishEngulfing) {
+      signals.push('bearish_engulfing');
+      signalDetails.bearish.push('Bearish Engulfing ♥️');
+    }
+    if (isDoji) {
+      signals.push('doji');
+      signalDetails.neutral.push('Doji ⚪');
+    }
+    if (isHammer) {
+      signals.push('hammer');
+      signalDetails.bullish.push('Hammer 💚');
+    }
+    if (isShootingStar) {
+      signals.push('shooting_star');
+      signalDetails.bearish.push('Shooting Star ♥️');
+    }
+
+    // Calculate final signal
+    const bullishWeight = signals.reduce((sum, s) => sum + (s.includes('bullish') || s.includes('bottom') || s.includes('hammer') ? SIGNAL_WEIGHTS[s] : 0), 0);
+    const bearishWeight = signals.reduce((sum, s) => sum + (s.includes('bearish') || s.includes('top') || s.includes('shooting') ? SIGNAL_WEIGHTS[s] : 0), 0);
+    const neutralWeight = signals.reduce((sum, s) => sum + (s.includes('doji') || s.includes('atr') ? SIGNAL_WEIGHTS[s] : 0), 0);
+
+    let finalSignal = '';
+    let signalStrength = '';
+    const bullishCount = signalDetails.bullish.length;
+    const bearishCount = signalDetails.bearish.length;
+    const neutralCount = signalDetails.neutral.length;
+
+    if (bullishCount >= techParams.minSignals && bullishWeight > bearishWeight * 1.5) {
+      if (bullishCount >= 5 && bullishWeight > 4.0 && bearishCount === 0) {
+        finalSignal = 'Strong Buy Signal 💚';
+        signalStrength = 'Strong';
+      } else if (bullishCount >= 3 && bullishWeight > 2.5) {
+        finalSignal = 'Moderate Buy Signal 💚';
+        signalStrength = 'Moderate';
+      } else {
+        finalSignal = 'Weak Buy Signal 💚';
+        signalStrength = 'Weak';
+      }
+    } else if (bearishCount >= techParams.minSignals && bearishWeight > bullishWeight * 1.5) {
+      if (bearishCount >= 5 && bearishWeight > 4.0 && bullishCount === 0) {
+        finalSignal = 'Strong Sell Signal ♥️';
+        signalStrength = 'Strong';
+      } else if (bearishCount >= 3 && bearishWeight > 2.5) {
+        finalSignal = 'Moderate Sell Signal ♥️';
+        signalStrength = 'Moderate';
+      } else {
+        finalSignal = 'Weak Sell Signal ♥️';
+        signalStrength = 'Weak';
+      }
+    } else {
+      finalSignal = 'No Clear Signal (Moderate) ⚪';
+      signalStrength = 'Neutral';
+    }
+
+    // Update signals table
+    const tbody = document.getElementById('tokenSignals').querySelector('tbody');
+    tbody.innerHTML = '';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${tokenOutData.name}</td>
+      <td class="signal-${signalStrength.toLowerCase()}">${finalSignal}</td>
+      <td>${bullishCount} (${signalDetails.bullish.join(', ')})</td>
+      <td>${bearishCount} (${signalDetails.bearish.join(', ')})</td>
+      <td>${neutralCount} (${signalDetails.neutral.join(', ')})</td>
+      <td>RSI: ${lastRsi?.toFixed(2) || '-'}, MACD: ${lastMacd ? `${lastMacd.MACD?.toFixed(2)}/${lastMacd.signal?.toFixed(2)}` : '-'}</td>
+    `;
+    tbody.appendChild(row);
+
+    document.getElementById('analysisResult').textContent = `Market Analysis: ${finalSignal} | Bullish: ${bullishCount}, Bearish: ${bearishCount}, Neutral: ${neutralCount}`;
+    addLog('Market Analysis', `Signal: ${finalSignal}, Bullish: ${bullishCount}, Bearish: ${bearishCount}, Neutral: ${neutralCount}`);
+
+    return { signals, finalSignal, signalStrength, signalDetails };
+  } catch (error) {
+    console.error('Error analyzing market:', error);
+    addLog('Error', 'Failed to analyze market');
+    return [];
+  }
+}
+
+// Toggle sidebar
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('hidden');
+}
+
+// Initialize application
+async function init() {
+  initializeDropdowns();
+  initializeCharts();
+  document.getElementById('timeframe').value = timeframe;
+  addLog('App Initialized', 'Trading Bot Dashboard loaded');
+
+  // Periodic updates
+  setInterval(async () => {
+    if (isConnected) {
+      await updateNativeBalance();
+      await updateTokenInfo();
+      await updateWalletBalances();
+      await analyzeMarket();
+    }
+  }, 60000); // Update every 60 seconds
+}
+
+// Start application
+window.onload = init;
+
+  </script>
+ </body>
+</html>
