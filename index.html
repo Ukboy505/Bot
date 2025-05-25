@@ -2272,7 +2272,7 @@ async function setNativeBudgetByPercent() {
   showLoading(true);
   try {
     const balance = await web3.eth.getBalance(account);
-    const budgetAmount = Number(web3.utils.fromWei(balance, 'ether')) * (percent / 100);
+    const budgetAmount = Number(web3.utils.fromWei(balance, 'ether')) * percent;
     if (budgetAmount < 0.001) {
       throw new Error('Budget too small (minimum 0.001 MATIC)');
     }
@@ -2316,7 +2316,7 @@ async function setTokenBudgetByPercent() {
   showLoading(true);
   try {
     const balance = await getTokenBalance(tokenAddress, account);
-    const budgetAmount = Number(web3.utils.fromWei(balance, getWeiUnit(tokenData.decimals))) * (percent / 100);
+    const budgetAmount = Number(web3.utils.fromWei(balance, getWeiUnit(tokenData.decimals))) * percent;
     if (budgetAmount < 0.001) {
       throw new Error(`Budget too small (minimum 0.001 ${tokenData.name})`);
     }
