@@ -1564,45 +1564,45 @@ document.getElementById('ohlcvLimit').addEventListener('input', (e) => {
     }
 
     async function connectWallet() {
-      if (!window.ethereum) {
-        alert('MetaMask is required. Please install it from https://metamask.io.');
-        return;
-      }
-      showLoading(true);
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (!web3) {
-          web3 = new Web3(window.ethereum);
-        }
-        account = accounts[0];
-        const chainId = await web3.eth.getChainId();
-        if (chainId !== parseInt(POLYGON_CHAIN_ID)) {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: web3.utils.toHex(POLYGON_CHAIN_ID) }]
-          });
-        }
-        contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-        isConnected = true;
-        document.getElementById('connectButton').style.display = 'none';
-        document.getElementById('disconnectButton').style.display = 'block';
-        document.getElementById('walletStatus').textContent = `Wallet: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
-        document.getElementById('contractStatus').textContent = 'Contract Status: Connected';
-        await updateContractStatus();
-        await updateTokenInfo();
-        await updateNativeBalance();
-        await updateWalletBalances();
-        await updateBudgetValues();
-
-        addLog('Wallet Connected', `Connected to ${account}`);
-      } catch (error) {
-        console.error('Error connecting wallet:', error);
-        addLog('Error', 'Failed to connect wallet');
-        alert('Failed to connect wallet: ' + error.message);
-      } finally {
-        showLoading(false);
-      }
+  if (!window.ethereum) {
+    alert('MetaMask is required. Please install it from https://metamask.io.');
+    return;
+  }
+  showLoading(true);
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!web3) {
+      web3 = new Web3(window.ethereum);
     }
+    account = accounts[0];
+    const chainId = await web3.eth.getChainId();
+    if (chainId !== parseInt(POLYGON_CHAIN_ID)) {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: web3.utils.toHex(POLYGON_CHAIN_ID) }]
+      });
+    }
+    contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+    isConnected = true;
+    document.getElementById('connectButton').style.display = 'none';
+    document.getElementById('disconnectButton').style.display = 'block';
+    document.getElementById('walletStatus').textContent = `Wallet: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+    document.getElementById('contractStatus').textContent = 'Contract Status: Connected';
+    await updateContractStatus();
+    await updateTokenInfo();
+    await updateNativeBalance();
+    await updateWalletBalances();
+    await updateBudgetValues();
+
+    addLog('Wallet Connected', `Connected to ${account}`);
+  } catch (error) {
+    console.error('Error connecting wallet:', error);
+    addLog('Error', 'Failed to connect wallet');
+    alert('Failed to connect wallet: ' + error.message);
+  } finally {
+    showLoading(false);
+  }
+}
 
     function disconnectWallet() {
       isConnected = false;
@@ -2387,7 +2387,7 @@ async function analyzeMarket() {
   let signals = { bullish: [], bearish: [], neutral: [] };
 
   try {
-    const ohlcv = await fetchOHLCV(tokenIn, timeframe);
+    const ohlcv = await fetchOHLCV(tokenIn);
     if (!ohlcv.length) {
       document.getElementById('analysisResult').textContent = 'Market Analysis: No OHLCV data available.';
       return { finalSignal: 'Neutral', signals };
@@ -2542,8 +2542,8 @@ async function refreshCharts() {
   if (!tokenIn || !tokenOut) return;
   showLoading(true);
   try {
-    const tokenInData = await fetchOHLCV(tokenIn, timeframe);
-    const tokenOutData = await fetchOHLCV(tokenOut, timeframe);
+    const tokenInData = await fetchOHLCV(tokenIn);
+const tokenOutData = await fetchOHLCV(tokenOut);
 
     const tokenInSeries = tokenInChart.addCandlestickSeries();
     const tokenOutSeries = tokenOutChart.addCandlestickSeries();
