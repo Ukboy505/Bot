@@ -138,6 +138,7 @@
             }
         }
     </style>
+          <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
 </head>
 <body>
     <header>
@@ -286,7 +287,7 @@
     <footer>
         <p>Powered by UK</p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
+
     <script>
         // Contract configuration
         const contractAddress = "0x9df0772e8bc2f778530c2be165db2181c8afd24e"; // Contract address
@@ -1430,14 +1431,29 @@
         let budgetTokenValid = false;
         let autoTradeTokenOutValid = false;
 
-        // Initialize Web3
-        async function initWeb3() {
+        // Initialize Web3 with retry mechanism
+async function initWeb3() {
     try {
-        if (!window.ethereum) {
-            showAlert('MetaMask is not installed! Please install MetaMask.');
-            console.error('MetaMask not detected');
-            return;
-        }
+        // Wait for MetaMask to load
+        const waitForMetaMask = () => new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 10;
+            const checkMetaMask = () => {
+                if (window.ethereum) {
+                    resolve();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkMetaMask, 500); // Retry every 500ms
+                } else {
+                    reject(new Error('MetaMask extension not found after retries'));
+                }
+            };
+            checkMetaMask();
+        });
+
+        await waitForMetaMask();
+        console.log('MetaMask detected');
+
         web3 = new Web3(window.ethereum);
         console.log('Web3 initialized:', web3.version);
 
@@ -1446,8 +1462,8 @@
             contract = new web3.eth.Contract(abi, contractAddress);
             console.log('Contract initialized at address:', contractAddress);
         } catch (abiError) {
-            console.error('Contract initialization failed. Check ABI:', abiError);
-            showAlert('Failed to initialize contract. Please check the ABI and contract address.');
+            console.error('Contract initialization failed:', abiError);
+            showAlert('Failed to initialize contract. Check ABI and contract address.');
             return;
         }
 
@@ -1465,14 +1481,15 @@
     }
 }
 
-        // Connect wallet
-        async function connectWallet() {
+// Connect wallet with network verification
+async function connectWallet() {
     try {
         if (!window.ethereum) {
-            showAlert('MetaMask is not installed! Please install MetaMask and try again.');
+            showAlert('MetaMask is not installed! Please install MetaMask from https://metamask.io.');
             console.error('MetaMask not detected');
             return;
         }
+
         // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         if (!accounts || accounts.length === 0) {
@@ -1486,23 +1503,37 @@
         // Verify network (Polygon Mainnet, Chain ID 137)
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
         if (chainId !== '0x89') { // 0x89 = 137 in hex
-            showAlert('Please switch to the Polygon Mainnet in MetaMask.');
+            showAlert('Switching to Polygon Mainnet...');
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: '0x89' }],
                 });
             } catch (switchError) {
-                console.error('Network switch failed:', switchError);
-                showAlert('Failed to switch to Polygon Mainnet. Please switch manually in MetaMask.');
-                return;
+                if (switchError.code === 4902) {
+                    // Network not added, add Polygon Mainnet
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x89',
+                            chainName: 'Polygon Mainnet',
+                            rpcUrls: ['https://polygon-rpc.com'],
+                            nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+                            blockExplorerUrls: ['https://polygonscan.com']
+                        }],
+                    });
+                } else {
+                    console.error('Network switch failed:', switchError);
+                    showAlert('Failed to switch to Polygon Mainnet. Please switch manually.');
+                    return;
+                }
             }
         }
 
-        // Check if contract is properly initialized
+        // Check contract initialization
         if (!contract) {
-            console.error('Contract not initialized. Check ABI and contract address.');
-            showAlert('Contract initialization failed. Please check the console for details.');
+            console.error('Contract not initialized');
+            showAlert('Contract initialization failed. Check console for details.');
             return;
         }
 
@@ -1510,7 +1541,7 @@
         isOwner = (await contract.methods.owner().call()) === account;
         console.log('Is owner:', isOwner);
 
-        // Load necessary data
+        // Load data
         await loadTokenList();
         await validateTokenIn();
         await validateTokenOut();
