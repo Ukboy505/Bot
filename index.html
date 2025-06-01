@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingBot DApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header, footer {
+            background-color: #1a73e8;
+            color: white;
+            text-align: center;
+            padding: 1em;
+        }
+        .container {
+            flex: 1;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab {
+            display: none;
+            margin-top: 20px;
+        }
+        .tab.active {
+            display: block;
+        }
+        .tab-content {
+            margin-top: 10px;
+        }
+        .nav-btns {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .nav-btn, .action-btn, .notification-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .nav-btn {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .action-btn, .notification-btn {
+            background-color: #1a73e8;
+            color: white;
+        }
+        .action-btn:hover, .nav-btn:hover, .notification-btn:hover {
+            opacity: 0.9;
+        }
+        .action-btn:disabled, .notification-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .percentage-input {
+            width: 48%;
+            display: inline-block;
+            margin-right: 4%;
+        }
+        .percentage-input:last-child {
+            margin-right: 0;
+        }
+        .token-search {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .token-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .event-log {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .no-tokens {
+            color: #888;
+            font-style: italic;
+        }
+        .notification {
+            margin: 8px 0;
+            padding: 10px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .notification p {
+            margin: 0;
+            color: #856404;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 10px;
+            }
+            .percentage-input {
+                width: 100%;
+                margin-right: 0;
+            }
+            .nav-btn, .action-btn, .notification-btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .notification {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .notification-btn {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TradingBot DApp</h1>
+        <button class="action-btn" id="connectBtn">Connect Wallet</button>
+    </header>
+    <div class="container">
+        <div class="tab active" id="homeTab">
+            <h2>Welcome to TradingBot</h2>
+            <p>Contract Address: <span id="contractAddress">Loading...</span></p>
+            <button class="action-btn" id="startBtn">Start Trading</button>
+        </div>
+        <div class="tab" id="tradeTab">
+            <h2>Trade</h2>
+            <div class="tab-content active" id="manualTrade">
+                <h3>Manual Trade</h3>
+                <input type="text" class="token-search" id="tokenInSearch" placeholder="Search Token In">
+                <select id="tokenIn" onchange="validateTokenIn()"></select>
+                <p id="tokenInEmpty" class="no-tokens" style="display: none;">No tokens configured in tradeIn</p>
+                <div id="tokenInNotification" class="notification" style="display: none;"></div>
+                <input type="text" class="token-search" id="tokenOutSearch" placeholder="Search Token Out">
+                <select id="tokenOut" onchange="validateTokenOut()"></select>
+                <p id="tokenOutEmpty" class="no-tokens" style="display: none;">No tokens configured in tradableTokens</p>
+                <div id="tokenOutNotification" class="notification" style="display: none;"></div>
+                <input type="number" id="amountIn" placeholder="Amount In" oninput="updateAmountOutMin()">
+                <input type="number" class="percentage-input" id="amountInPercent" placeholder="% of Balance" oninput="setAmountInPercent()">
+                <p>Estimated Amount Out: <span id="amountOut">0</span></p>
+                <input type="number" id="amountOutMin" placeholder="Min Amount Out">
+                <input type="number" class="percentage-input" id="amountOutMinPercent" placeholder="% of Amount Out" oninput="setAmountOutMinPercent()">
+                <p>Trade Value: <span id="tradeValueUSD">0.00 USD</span></p>
+                <input type="number" id="slippage" placeholder="Slippage (%)" value="0.5" oninput="updateAmountOutMin()">
+                <input type="number" id="deadline" placeholder="Deadline (minutes)" value="10">
+                <select id="orderType" onchange="updateTokenOutOptions()">
+                    <option value="0">Buy</option>
+                    <option value="1">Sell</option>
+                </select>
+                <button class="action-btn" id="executeTradeBtn" onclick="executeTrade(false)" disabled>Execute Trade</button>
+                <div class="nav-btns">
+                    <button class="nav-btn" onclick="navigatePrevious('tradeTab')">Previous</button>
+                    <button class="nav-btn" onclick="navigateNext('manualTrade')">Next</button>
+                </div>
+            </div>
+            <div class="tab-content" id="autoTrade">
+                <h3>Auto Trade</h3>
+                <p>Auto Trade Status: <span id="autoTradeStatus">Loading...</span></p>
+                <label><input type="checkbox" id="autoTradeOnCheckbox" onclick="checkAutoTradeStatus()"> Enable Auto Trade Timer</label>
+                <input type="text" class="token-search" id="budgetTokenSearch" placeholder="Search Token In">
+                <select id="budgetToken" onchange="validateBudgetToken()"></select>
+                <p id="budgetTokenEmpty" class="no-tokens" style="display: none;">No tokens with auto trade budget</p>
+                <div id="budgetTokenNotification" class="notification" style="display: none;"></div>
+                <p>Budget: <span id="autoTradeBudget">0</span> (<span id="budgetValueUSD">0.00 USD</span>)</p>
+                <button class="action-btn" id="switchAutoTradeBtn" onclick="switchAutoTrade()">Switch On</button>
+                <input type="number" id="budgetAmount" placeholder="Budget Amount" oninput="updateBudgetUSD()">
+                <input type="number" class="percentage-input" id="budgetAmountPercent" placeholder="% of Budget" oninput="setBudgetAmountPercent()">
+                <select id="budgetAction">
+                    <option value="0">Approve</option>
+                    <option value="1">Revoke</option>
+                </select>
+                <button class="action-btn" onclick="manageBudget()">Manage Budget</button>
+                <input type="number" id="autoTradeAmountIn" placeholder="Amount In per Trade" oninput="updateAutoTradeAmountOutMin()">
+                <input type="number" class="percentage-input" id="autoTradeAmountInPercent" placeholder="% of Budget" oninput="setAutoTradeAmountInPercent()">
+                <input type="text" class="token-search" id="autoTradeTokenOutSearch" placeholder="Search Token Out">
+                <select id="autoTradeTokenOut" onchange="validateAutoTradeTokenOut()"></select>
+                <p id="autoTradeTokenOutEmpty" class="no-tokens" style="display: none;">No valid tokenOut available</p>
+                <div id="autoTradeTokenOutNotification" class="notification" style="display: none;"></div>
+                <p>Estimated Amount Out: <span id="autoTradeAmountOut">0</span></p>
+                <input type="number" id="autoTradeAmountOutMin" placeholder="Min Amount Out">
+                <input type="number" class="percentage-input" id="autoTradeAmountOutMinPercent" placeholder="% of Est. Amount Out" oninput="setAutoTradeAmountOutMinPercent()">
+                <select id="autoTradeOrderType" onchange="updateAutoTradeTokenOutOptions()">
+                    <option value="0">Buy</option>
+                    <option value="1">Sell</option>
+                </select>
+                <input type="number" class="percentage-input" id="autoTradeTimer" placeholder="Trade Interval (minutes)">
+                <button class="action-btn" id="autoTradeTimerBtn" onclick="toggleAutoTradeTimer()" disabled>Start Auto Trade Timer</button>
+                <div class="nav-btns">
+                    <button class="nav-btn" onclick="navigatePrevious('tradeTab')">Previous</button>
+                    <button class="nav-btn" onclick="navigateNext('autoTrade')">Next</button>
+                </div>
+            </div>
+        </div>
+        <div class="tab" id="historyTab">
+            <h2>Trade History</h2>
+            <div class="event-log" id="tradeEvents"></div>
+            <div class="nav-btns">
+                <button class="nav-btn" onclick="navigatePrevious('historyTab')">Previous</button>
+                <button class="nav-btn" onclick="navigateNext('historyTab')">Next</button>
+            </div>
+        </div>
+        <div class="tab" id="walletTab">
+            <h2>Wallet</h2>
+            <div class="tab-content active" id="tokenListTab">
+                <h3>Token Balances</h3>
+                <input type="text" class="token-search" id="tokenListSearch" placeholder="Search Tokens">
+                <div id="tokenList"></div>
+                <p id="tokenListEmpty" class="no-tokens" style="display: none;">No tokens with balance</p>
+                <div class="nav-btns">
+                    <button class="nav-btn" onclick="navigatePrevious('walletTab')">Previous</button>
+                    <button class="nav-btn" onclick="navigateNext('tokenListTab')">Next</button>
+                </div>
+            </div>
+            <div class="tab-content" id="depositTab">
+                <h3>Deposit</h3>
+                <input type="text" class="token-search" id="depositTokenSearch" placeholder="Search Token">
+                <select id="depositToken"></select>
+                <p id="depositTokenEmpty" class="no-tokens" style="display: none;">No tokens available for deposit</p>
+                <input type="number" id="depositAmount" placeholder="Deposit Amount">
+                <button class="action-btn" onclick="topUp()">Deposit</button>
+                <div class="nav-btns">
+                    <button class="nav-btn" onclick="navigatePrevious('walletTab')">Previous</button>
+                    <button class="nav-btn" onclick="navigateNext('depositTab')">Next</button>
+                </div>
+            </div>
+            <div class="tab-content" id="withdrawTab">
+                <h3>Withdraw</h3>
+                <select id="withdrawType" onchange="updateWithdrawInfo()">
+                    <option value="0">Normal</option>
+                    <option value="1">Emergency</option>
+                </select>
+                <input type="text" class="token-search" id="withdrawTokenSearch" placeholder="Search Token">
+                <select id="withdrawToken" onchange="updateWithdrawInfo()"></select>
+                <p id="withdrawTokenEmpty" class="no-tokens" style="display: none;">No tokens available for withdrawal</p>
+                <p>Available Balance: <span id="availableBalance">0</span></p>
+                <p>Budgeted Amount: <span id="budgetedAmount">0</span></p>
+                <p>Withdraw Value: <span id="withdrawValueUSD">0.00 USD</span></p>
+                <input type="number" id="withdrawAmount" placeholder="Withdraw Amount">
+                <div id="emergencyTokens" style="display: none;">
+                    <h4>Select Tokens for Emergency Withdrawal</h4>
+                    <div id="emergencyTokenList"></div>
+                </div>
+                <button class="action-btn" onclick="executeWithdraw()">Withdraw</button>
+                <div class="nav-btns">
+                    <button class="nav-btn" onclick="navigatePrevious('walletTab')">Previous</button>
+                    <button class="nav-btn" onclick="navigateNext('withdrawTab')">Next</button>
+                </div>
+            </div>
+        </div>
+        <div class="tab" id="settingsTab">
+            <h2>Settings</h2>
+            <div class="event-log" id="settingsEvents"></div>
+            <div class="nav-btns">
+                <button class="nav-btn" onclick="navigatePrevious('settingsTab')">Previous</button>
+                <button class="nav-btn" onclick="navigateNext('settingsTab')">Next</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>Powered by UK</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
+    <script>
+        // Contract configuration
+        const contractAddress = "0x9df0772e8bc2f778530c2be165db2181c8afd24e"; // Contract address
+        const quickswapRouter = "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"; // Quickswap V2 Router
+        const wmaticAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"; // WMATIC on Polygon
+        const usdtAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // USDT on Polygon
+        const usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; // USDC on Polygon
+        const daiAddress = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"; // DAI on Polygon
+        const abi = [{"inputs":[{"internalType":"address","name":"_router","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"caller","type":"address"},{"indexed":false,"internalType":"bool","name":"status","type":"bool"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"AutoTradeSwitched","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"totalBudget","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"BudgetApproved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"remainingBudget","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"BudgetRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"ToppedUp","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address[]","name":"tokens","type":"address[]"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TradableRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address[]","name":"tokens","type":"address[]"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TradableSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"caller","type":"address"},{"indexed":true,"internalType":"address","name":"tokenIn","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountIn","type":"uint256"},{"indexed":true,"internalType":"address","name":"tokenOut","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountOut","type":"uint256"},{"indexed":false,"internalType":"enum TradingBot.OrderType","name":"orderType","type":"uint8"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"Trade","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TradeInRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TradeInSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TradeOutRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TradeOutSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address[]","name":"tokens","type":"address[]"},{"indexed":false,"internalType":"uint256[]","name":"amounts","type":"uint256[]"},{"indexed":false,"internalType":"enum TradingBot.WithdrawType","name":"action","type":"uint8"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"Withdrawn","type":"event"},{"inputs":[],"name":"WETH","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"autoTradeBudget","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"autoTradeOn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"enum TradingBot.BudgetType","name":"action","type":"uint8"}],"name":"budget","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"tokens","type":"address[]"}],"name":"emergency","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"enum TradingBot.GetType","name":"query","type":"uint8"},{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"get","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastTradedTokenIn","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastTradedTokenOut","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"router","outputs":[{"internalType":"contract IUniswapV2Router02","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bool","name":"status","type":"bool"}],"name":"setPause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bool","name":"status","type":"bool"}],"name":"switchAutoTrade","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"topUp","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address[]","name":"tokens","type":"address[]"},{"internalType":"enum TradingBot.ActionType[]","name":"actions","type":"uint8[]"}],"name":"tradableAction","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"tradableTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"enum TradingBot.OrderType","name":"orderType","type":"uint8"},{"internalType":"enum TradingBot.TradeMode","name":"tradeMode","type":"uint8"}],"name":"trade","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"tradeIn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"tradeOut","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"bool","name":"isTradeIn","type":"bool"},{"internalType":"enum TradingBot.ActionType","name":"action","type":"uint8"}],"name":"tradeTokenAction","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"stateMutability":"payable","type":"receive"}];
+        const erc20Abi = [
+            {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
+        ];
+
+        let web3, contract, account, isOwner = false;
+        const navigationStack = [];
+        const tokenCache = new Map();
+        let selectedAllowanceTokens = [];
+        let autoTradeInterval = null;
+        let tradeInTokens = [];
+        let tradeOutTokens = [];
+        let tradableTokens = [];
+        let budgetTokens = [];
+        let tokenInValid = false;
+        let tokenOutValid = false;
+        let budgetTokenValid = false;
+        let autoTradeTokenOutValid = false;
+
+        // Initialize Web3
+        async function initWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                contract = new web3.eth.Contract(abi, contractAddress);
+                await fetchContractTokens();
+                await loadTokenLists();
+                await updateAutoTradeStatus();
+                await loadTradeEvents();
+                await loadSettingsEvents();
+                subscribeToContractEvents();
+            } else {
+                showAlert('Please install MetaMask!');
+            }
+        }
+
+        // Connect wallet
+        async function connectWallet() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                account = accounts[0];
+                document.getElementById('connectBtn').textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                isOwner = await contract.methods.owner().call() === account;
+                await loadTokenList();
+                await validateTokenIn();
+                await validateTokenOut();
+                await validateBudgetToken();
+                await validateAutoTradeTokenOut();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to connect wallet.');
+            }
+        }
+
+        // Disconnect wallet
+        function disconnectWallet() {
+            account = null;
+            isOwner = false;
+            document.getElementById('connectBtn').textContent = 'Connect Wallet';
+            tokenInValid = false;
+            tokenOutValid = false;
+            budgetTokenValid = false;
+            autoTradeTokenOutValid = false;
+            updateTradeButtonState();
+            showAlert('Wallet disconnected.');
+        }
+
+        // Show alert
+        function showAlert(message) {
+            alert(message); // Replace with toast notifications in production
+        }
+
+        // Navigation
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'tradeTab') {
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById('manualTrade').classList.add('active');
+            }
+            navigationStack.push(tabId);
+        }
+
+        function showSubTab(subTabId) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(subTabId).classList.add('active');
+            navigationStack.push(subTabId);
+        }
+
+        function navigatePrevious(currentTab) {
+            navigationStack.pop();
+            const previous = navigationStack.pop() || 'homeTab';
+            showTab(currentTab === 'tradeTab' || currentTab === 'walletTab' ? currentTab : previous);
+            if (currentTab === 'tradeTab' && previous === 'manualTrade' || previous === 'autoTrade') {
+                showSubTab(previous);
+            } else if (currentTab === 'walletTab' && ['tokenListTab', 'depositTab', 'withdrawTab'].includes(previous)) {
+                showSubTab(previous);
+            }
+        }
+
+        function navigateNext(currentContent) {
+            const nextTabs = {
+                'homeTab': 'tradeTab',
+                'manualTrade': 'autoTrade',
+                'autoTrade': 'historyTab',
+                'historyTab': 'walletTab',
+                'tokenListTab': 'depositTab',
+                'depositTab': 'withdrawTab',
+                'withdrawTab': 'settingsTab',
+                'settingsTab': 'homeTab'
+            };
+            const next = nextTabs[currentContent] || 'homeTab';
+            showTab(next);
+            if (next === 'tradeTab') {
+                showSubTab('manualTrade');
+            } else if (next === 'walletTab') {
+                showSubTab('tokenListTab');
+            }
+        }
+
+        // Utility function for amount conversion
+        function convertAmount(amount, decimals, toWei = true) {
+            if (!amount || isNaN(amount)) return '0';
+            const bn = web3.utils.toBN;
+            const factor = bn(10).pow(bn(decimals));
+            if (toWei) {
+                const [integer, fraction = ''] = amount.toString().split('.');
+                const paddedFraction = fraction.padEnd(decimals, '0').slice(0, decimals);
+                const fullAmount = bn(integer + paddedFraction);
+                return fullAmount.toString();
+            } else {
+                const amountBN = bn(amount);
+                const integer = amountBN.div(factor).toString();
+                const fraction = amountBN.mod(factor).toString().padStart(decimals, '0').replace(/0+$/, '');
+                return fraction ? `${integer}.${fraction}` : integer;
+            }
+        }
+
+        // Fetch token metadata
+        async function getTokenMetadata(tokenAddress) {
+            if (tokenAddress === '0x0000000000000000000000000000000000000000') {
+                return { name: 'Polygon', symbol: 'POL', decimals: 18 };
+            }
+            if (tokenCache.has(tokenAddress)) {
+                return tokenCache.get(tokenAddress);
+            }
+            try {
+                const tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
+                const [name, symbol, decimals] = await Promise.all([
+                    tokenContract.methods.name().call(),
+                    tokenContract.methods.symbol().call(),
+                    tokenContract.methods.decimals().call()
+                ]);
+                const metadata = { name, symbol, decimals: parseInt(decimals) };
+                tokenCache.set(tokenAddress, metadata);
+                return metadata;
+            } catch (error) {
+                console.error(`Failed to fetch metadata for ${tokenAddress}:`, error);
+                return { name: 'Unknown', symbol: 'UNK', decimals: 18 };
+            }
+        }
+
+        // Get token value in USD
+        async function getTokenValueUSD(tokenAddress, amount) {
+            if (!amount || web3.utils.toBN(amount).isZero()) return '0.00';
+
+            // Select a reference token from tradableTokens or tradeOut
+            let referenceToken = null;
+            const stablecoins = [usdtAddress, usdcAddress, daiAddress]; // Prioritize USDT, then USDC, then DAI
+            for (const stablecoin of stablecoins) {
+                if (tradableTokens.includes(stablecoin) || tradeOutTokens.includes(stablecoin)) {
+                    referenceToken = stablecoin;
+                    break;
+                }
+            }
+            if (!referenceToken) {
+                // Fallback to WMATIC if no stablecoin is available
+                if (tradableTokens.includes(wmaticAddress) || tradeOutTokens.includes(wmaticAddress)) {
+                    referenceToken = wmaticAddress;
+                }
+            }
+            if (!referenceToken) {
+                console.warn('No valid reference token found for USD conversion.');
+                return '0.00';
+            }
+
+            const referenceMetadata = await getTokenMetadata(referenceToken);
+            try {
+                const path = [
+                    tokenAddress === '0x0000000000000000000000000000000000000000' ? wmaticAddress : tokenAddress,
+                    referenceToken
+                ];
+                const amounts = await contract.methods.get(2, tokenAddress, amount, path).call();
+                const usdValue = convertAmount(amounts[1], referenceMetadata.decimals, false);
+                
+                // If reference is WMATIC, convert to USD using a stablecoin pair
+                if (referenceToken === wmaticAddress) {
+                    for (const stablecoin of stablecoins) {
+                        if (tradableTokens.includes(stablecoin) || tradeOutTokens.includes(stablecoin)) {
+                            const wmaticPath = [wmaticAddress, stablecoin];
+                            const stablecoinMeta = await getTokenMetadata(stablecoin);
+                            const wmaticAmounts = await contract.methods.get(2, wmaticAddress, amounts[1], wmaticPath).call();
+                            return convertAmount(wmaticAmounts[1], stablecoinMeta.decimals, false);
+                        }
+                    }
+                    // If no stablecoin, return WMATIC value (less accurate)
+                    return usdValue;
+                }
+                
+                return usdValue;
+            } catch (error) {
+                console.error(`Failed to get USD value for ${tokenAddress}:`, error);
+                return '0.00';
+            }
+        }
+
+        // Fetch tokens from contract mappings via events
+        async function fetchContractTokens() {
+            tradeInTokens = [];
+            tradeOutTokens = [];
+            tradableTokens = [];
+            budgetTokens = [];
+
+            // Fetch tokens from events
+            const tradeInEvents = await contract.getPastEvents('TradeInSet', { fromBlock: 0 });
+            const tradeOutEvents = await contract.getPastEvents('TradeOutSet', { fromBlock: 0 });
+            const tradableEvents = await contract.getPastEvents('TradableTokenSet', { fromBlock: 0 });
+
+            tradeInTokens = tradeInEvents
+                .filter(event => event.returnValues.status)
+                .map(event => event.returnValues.token)
+                .concat(['0x0000000000000000000000000000000000000000']); // Include POL
+
+            tradeOutTokens = tradeOutEvents
+                .filter(event => event.returnValues.status)
+                .map(event => event.returnValues.token)
+                .concat(['0x0000000000000000000000000000000000000000']); // Include POL
+
+            tradableTokens = tradableEvents
+                .filter(event => event.returnValues.status)
+                .map(event => event.returnValues.token)
+                .concat(['0x0000000000000000000000000000000000000000']); // Include POL
+
+            // Fetch tokens with non-zero autoTradeBudget
+            const allTokens = [...new Set([...tradeInTokens, ...tradeOutTokens, ...tradableTokens])];
+            for (const token of allTokens) {
+                const budget = await contract.methods.autoTradeBudget(token).call();
+                if (web3.utils.toBN(budget).gt(web3.utils.toBN(0))) {
+                    budgetTokens.push(token);
+                }
+            }
+        }
+
+        // Subscribe to contract events for real-time updates
+        function subscribeToContractEvents() {
+            contract.events.TradeInSet({}, async () => {
+                await fetchContractTokens();
+                await loadTokenLists();
+                await validateTokenIn();
+                await validateTokenOut();
+            });
+            contract.events.TradeOutSet({}, async () => {
+                await fetchContractTokens();
+                await loadTokenLists();
+                await validateTokenOut();
+                await validateAutoTradeTokenOut();
+            });
+            contract.events.TradableTokenSet({}, async () => {
+                await fetchContractTokens();
+                await loadTokenLists();
+                await validateTokenOut();
+                await validateAutoTradeTokenOut();
+            });
+            contract.events.BudgetApproved({}, async () => {
+                await fetchContractTokens();
+                await loadTokenLists();
+                await validateBudgetToken();
+                await updateAutoTradeStatus();
+            });
+            contract.events.BudgetRevoked({}, async () => {
+                await fetchContractTokens();
+                await loadTokenLists();
+                await validateBudgetToken();
+                await updateAutoTradeStatus();
+            });
+            contract.events.Trade({}, async () => {
+                await loadTradeEvents();
+                await loadTokenList();
+                await validateTokenIn();
+                await validateBudgetToken();
+            });
+            contract.events.TopUp({}, async () => {
+                await loadTokenList();
+                await validateTokenIn();
+                await validateBudgetToken();
+            });
+        }
+
+        // Load token lists with search
+        async function loadTokenLists() {
+            const tokenIn = document.getElementById('tokenIn');
+            const tokenOut = document.getElementById('tokenOut');
+            const budgetToken = document.getElementById('budgetToken');
+            const depositToken = document.getElementById('depositToken');
+            const withdrawToken = document.getElementById('withdrawToken');
+            const autoTradeTokenOut = document.getElementById('autoTradeTokenOut');
+
+            const populateDropdown = async (select, searchInputId, tokens, emptyMessageId) => {
+                select.innerHTML = '';
+                const emptyMessage = document.getElementById(emptyMessageId);
+                if (tokens.length === 0) {
+                    emptyMessage.style.display = 'block';
+                    select.disabled = true;
+                    return;
+                }
+                emptyMessage.style.display = 'none';
+                select.disabled = false;
+                for (const token of tokens) {
+                    const metadata = await getTokenMetadata(token);
+                    const option = document.createElement('option');
+                    option.value = token;
+                    option.textContent = `${metadata.name} (${metadata.symbol})`;
+                    select.appendChild(option);
+                }
+                const searchInput = document.getElementById(searchInputId);
+                searchInput.addEventListener('input', () => {
+                    const filter = searchInput.value.toLowerCase();
+                    Array.from(select.options).forEach(option => {
+                        const text = option.textContent.toLowerCase();
+                        option.style.display = text.includes(filter) ? '' : 'none';
+                    });
+                });
+            };
+
+            // Manual Trade: tokenIn from tradeIn, tokenOut from tradeIn or tradableTokens based on orderType
+            const orderType = document.getElementById('orderType').value;
+            const tokenOutOptions = orderType === '0' ? tradableTokens : [...new Set([...tradeOutTokens, ...tradeInTokens])];
+
+            // Auto Trade: budgetToken from tokens with non-zero autoTradeBudget, autoTradeTokenOut based on orderType
+            const autoOrderType = document.getElementById('autoTradeOrderType').value;
+            const autoTokenOutOptions = autoOrderType === '0' ? tradableTokens : [...new Set([...tradeOutTokens, ...tradeInTokens])];
+
+            // Wallet: depositToken and withdrawToken from all tokens with balance or budget
+            const walletTokens = [...new Set([...tradeInTokens, ...tradeOutTokens, ...tradableTokens, ...budgetTokens])];
+
+            await Promise.all([
+                populateDropdown(tokenIn, 'tokenInSearch', tradeInTokens, 'tokenInEmpty'),
+                populateDropdown(tokenOut, 'tokenOutSearch', tokenOutOptions, 'tokenOutEmpty'),
+                populateDropdown(budgetToken, 'budgetTokenSearch', budgetTokens, 'budgetTokenEmpty'),
+                populateDropdown(depositToken, 'depositTokenSearch', walletTokens, 'depositTokenEmpty'),
+                populateDropdown(withdrawToken, 'withdrawTokenSearch', walletTokens, 'withdrawTokenEmpty'),
+                populateDropdown(autoTradeTokenOut, 'autoTradeTokenOutSearch', autoTokenOutOptions, 'autoTradeTokenOutEmpty')
+            ]);
+
+            document.getElementById('contractAddress').textContent = contractAddress;
+            await validateTokenIn();
+            await validateTokenOut();
+            await validateBudgetToken();
+            await validateAutoTradeTokenOut();
+        }
+
+        // Update tokenOut options based on orderType
+        async function updateTokenOutOptions() {
+            const tokenOut = document.getElementById('tokenOut');
+            const orderType = document.getElementById('orderType').value;
+            const tokenOutOptions = orderType === '0' ? tradableTokens : [...new Set([...tradeOutTokens, ...tradeInTokens])];
+            const emptyMessage = document.getElementById('tokenOutEmpty');
+
+            tokenOut.innerHTML = '';
+            if (tokenOutOptions.length === 0) {
+                emptyMessage.style.display = 'block';
+                tokenOut.disabled = true;
+                tokenOutValid = false;
+                updateTradeButtonState();
+                return;
+            }
+            emptyMessage.style.display = 'none';
+            tokenOut.disabled = false;
+            for (const token of tokenOutOptions) {
+                const metadata = await getTokenMetadata(token);
+                const option = document.createElement('option');
+                option.value = token;
+                option.textContent = `${metadata.name} (${metadata.symbol})`;
+                tokenOut.appendChild(option);
+            }
+            await validateTokenOut();
+            await updateAmountOutMin();
+        }
+
+        // Update auto trade tokenOut options based on orderType
+        async function updateAutoTradeTokenOutOptions() {
+            const autoTradeTokenOut = document.getElementById('autoTradeTokenOut');
+            const autoOrderType = document.getElementById('autoTradeOrderType').value;
+            const tokenOutOptions = autoOrderType === '0' ? tradableTokens : [...new Set([...tradeOutTokens, ...tradeInTokens])];
+            const emptyMessage = document.getElementById('autoTradeTokenOutEmpty');
+
+            autoTradeTokenOut.innerHTML = '';
+            if (tokenOutOptions.length === 0) {
+                emptyMessage.style.display = 'block';
+                autoTradeTokenOut.disabled = true;
+                autoTradeTokenOutValid = false;
+                updateAutoTradeButtonState();
+                return;
+            }
+            emptyMessage.style.display = 'none';
+            autoTradeTokenOut.disabled = false;
+            for (const token of tokenOutOptions) {
+                const metadata = await getTokenMetadata(token);
+                const option = document.createElement('option');
+                option.value = token;
+                option.textContent = `${metadata.name} (${metadata.symbol})`;
+                autoTradeTokenOut.appendChild(option);
+            }
+            await validateAutoTradeTokenOut();
+            await updateAutoTradeAmountOutMin();
+        }
+
+        // Validate tokenIn (Manual Trade)
+        async function validateTokenIn() {
+            const tokenIn = document.getElementById('tokenIn').value;
+            const notificationDiv = document.getElementById('tokenInNotification');
+            const executeTradeBtn = document.getElementById('executeTradeBtn');
+            notificationDiv.style.display = 'none';
+            notificationDiv.innerHTML = '';
+            tokenInValid = false;
+
+            if (!tokenIn || !account) {
+                updateTradeButtonState();
+                return;
+            }
+
+            const metadata = await getTokenMetadata(tokenIn);
+            let balance;
+            try {
+                balance = tokenIn === '0x0000000000000000000000000000000000000000'
+                    ? await web3.eth.getBalance(account)
+                    : await new web3.eth.Contract(erc20Abi, tokenIn).methods.balanceOf(account).call();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to fetch balance.');
+                return;
+            }
+
+            if (web3.utils.toBN(balance).isZero()) {
+                notificationDiv.innerHTML = `
+                    <p>Insufficient ${metadata.symbol} balance! Please deposit ${metadata.symbol}</p>
+                    <button class="notification-btn" onclick="navigateToDeposit('${tokenIn}')">Deposit</button>
+                `;
+                notificationDiv.style.display = 'flex';
+                updateTradeButtonState();
+                return;
+            }
+
+            if (tokenIn !== '0x0000000000000000000000000000000000000000') {
+                try {
+                    const tokenContract = new web3.eth.Contract(erc20Abi, tokenIn);
+                    const allowance = await tokenContract.methods.allowance(account, contractAddress).call();
+                    const minTradeAmount = convertAmount('0.01', metadata.decimals); // Minimum trade amount
+                    if (web3.utils.toBN(allowance).lt(web3.utils.toBN(minTradeAmount))) {
+                        notificationDiv.innerHTML = `
+                            <p>Insufficient ${metadata.symbol} allowance! Please approve ${metadata.symbol}</p>
+                            <button class="notification-btn" onclick="approveToken('${tokenIn}')">Approve</button>
+                        `;
+                        notificationDiv.style.display = 'flex';
+                        updateTradeButtonState();
+                        return;
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showAlert('Failed to check allowance.');
+                    return;
+                }
+            }
+
+            tokenInValid = true;
+            updateTradeButtonState();
+            await updateAmountOutMin();
+        }
+
+        // Validate tokenOut (Manual Trade)
+        async function validateTokenOut() {
+            const tokenIn = document.getElementById('tokenIn').value;
+            const tokenOut = document.getElementById('tokenOut').value;
+            const orderType = document.getElementById('orderType').value;
+            const notificationDiv = document.getElementById('tokenOutNotification');
+            notificationDiv.style.display = 'none';
+            notificationDiv.innerHTML = '';
+            tokenOutValid = false;
+
+            if (!tokenOut || !tokenIn || tokenIn === tokenOut) {
+                notificationDiv.innerHTML = `<p>Please select a different token for Token Out.</p>`;
+                notificationDiv.style.display = 'flex';
+                updateTradeButtonState();
+                return;
+            }
+
+            const isValidPair = orderType === '0'
+                ? tradableTokens.includes(tokenOut) || tokenOut === '0x0000000000000000000000000000000000000000'
+                : tradeOutTokens.includes(tokenOut) || tradeInTokens.includes(tokenOut);
+            if (!isValidPair) {
+                const metadata = await getTokenMetadata(tokenOut);
+                notificationDiv.innerHTML = `<p>${metadata.symbol} is not valid for ${orderType === '0' ? 'Buy' : 'Sell'} order.</p>`;
+                notificationDiv.style.display = 'flex';
+                updateTradeButtonState();
+                return;
+            }
+
+            tokenOutValid = true;
+            updateTradeButtonState();
+            await updateAmountOutMin();
+        }
+
+        // Validate budgetToken (Auto Trade)
+        async function validateBudgetToken() {
+            const tokenIn = document.getElementById('budgetToken').value;
+            const notificationDiv = document.getElementById('budgetTokenNotification');
+            notificationDiv.style.display = 'none';
+            notificationDiv.innerHTML = '';
+            budgetTokenValid = false;
+
+            if (!tokenIn || !account) {
+                updateAutoTradeButtonState();
+                return;
+            }
+
+            const metadata = await getTokenMetadata(tokenIn);
+            let balance, budget;
+            try {
+                balance = await contract.methods.get(0, tokenIn, 0, []).call();
+                budget = await contract.methods.autoTradeBudget(tokenIn).call();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to fetch balance or budget.');
+                return;
+            }
+
+            if (web3.utils.toBN(balance).isZero()) {
+                notificationDiv.innerHTML = `
+                    <p>Insufficient ${metadata.symbol} balance in contract! Please deposit ${metadata.symbol}</p>
+                    <button class="notification-btn" onclick="navigateToDeposit('${tokenIn}')">Deposit</button>
+                `;
+                notificationDiv.style.display = 'flex';
+                updateAutoTradeButtonState();
+                return;
+            }
+
+            if (web3.utils.toBN(budget).isZero()) {
+                notificationDiv.innerHTML = `
+                    <p>No auto trade budget for ${metadata.symbol}! Please set budget</p>
+                    <button class="notification-btn" onclick="navigateToBudget('${tokenIn}')">Set Budget</button>
+                `;
+                notificationDiv.style.display = 'flex';
+                updateAutoTradeButtonState();
+                return;
+            }
+
+            if (tokenIn !== '0x0000000000000000000000000000000000000000') {
+                try {
+                    const tokenContract = new web3.eth.Contract(erc20Abi, tokenIn);
+                    const allowance = await tokenContract.methods.allowance(account, contractAddress).call();
+                    const minTradeAmount = convertAmount('0.01', metadata.decimals);
+                    if (web3.utils.toBN(allowance).lt(web3.utils.toBN(minTradeAmount))) {
+                        notificationDiv.innerHTML = `
+                            <p>Insufficient ${metadata.symbol} allowance! Please approve ${metadata.symbol}</p>
+                            <button class="notification-btn" onclick="approveToken('${tokenIn}')">Approve</button>
+                        `;
+                        notificationDiv.style.display = 'flex';
+                        updateAutoTradeButtonState();
+                        return;
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showAlert('Failed to check allowance.');
+                    return;
+                }
+            }
+
+            budgetTokenValid = true;
+            updateAutoTradeButtonState();
+            await updateAutoTradeBudget();
+        }
+
+        // Validate autoTradeTokenOut (Auto Trade)
+        async function validateAutoTradeTokenOut() {
+            const tokenIn = document.getElementById('budgetToken').value;
+            const tokenOut = document.getElementById('autoTradeTokenOut').value;
+            const orderType = document.getElementById('autoTradeOrderType').value;
+            const notificationDiv = document.getElementById('autoTradeTokenOutNotification');
+            notificationDiv.style.display = 'none';
+            notificationDiv.innerHTML = '';
+            autoTradeTokenOutValid = false;
+
+            if (!tokenOut || !tokenIn || tokenIn === tokenOut) {
+                notificationDiv.innerHTML = `<p>Please select a different token for Token Out.</p>`;
+                notificationDiv.style.display = 'flex';
+                updateAutoTradeButtonState();
+                return;
+            }
+
+            const isValidPair = orderType === '0'
+                ? tradableTokens.includes(tokenOut) || tokenOut === '0x0000000000000000000000000000000000000000'
+                : tradeOutTokens.includes(tokenOut) || tradeInTokens.includes(tokenOut);
+            if (!isValidPair) {
+                const metadata = await getTokenMetadata(tokenOut);
+                notificationDiv.innerHTML = `<p>${metadata.symbol} is not valid for ${orderType === '0' ? 'Buy' : 'Sell'} order.</p>`;
+                notificationDiv.style.display = 'flex';
+                updateAutoTradeButtonState();
+                return;
+            }
+
+            autoTradeTokenOutValid = true;
+            updateAutoTradeButtonState();
+            await updateAutoTradeAmountOutMin();
+        }
+
+        // Navigate to deposit tab
+        function navigateToDeposit(tokenAddress) {
+            showTab('walletTab');
+            showSubTab('depositTab');
+            document.getElementById('depositToken').value = tokenAddress;
+        }
+
+        // Navigate to budget management
+        function navigateToBudget(tokenAddress) {
+            showTab('tradeTab');
+            showSubTab('autoTrade');
+            document.getElementById('budgetToken').value = tokenAddress;
+            document.getElementById('budgetAction').value = '0'; // Approve
+        }
+
+        // Approve token
+        async function approveToken(tokenAddress) {
+            if (!account) {
+                showAlert('Please connect wallet.');
+                return;
+            }
+            try {
+                const metadata = await getTokenMetadata(tokenAddress);
+                const tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
+                const approveAmount = convertAmount('1000', metadata.decimals); // Approve 1000 tokens
+                await tokenContract.methods.approve(contractAddress, approveAmount).send({ from: account });
+                showAlert(`${metadata.symbol} approved successfully!`);
+                await validateTokenIn();
+                await validateBudgetToken();
+            } catch (error) {
+                console.error(error);
+                showAlert('Approval failed: ' + (error.message || 'Unknown error'));
+            }
+        }
+
+        // Update trade button state
+        function updateTradeButtonState() {
+            const executeTradeBtn = document.getElementById('executeTradeBtn');
+            executeTradeBtn.disabled = !(tokenInValid && tokenOutValid && account);
+        }
+
+        // Update auto trade button state
+        function updateAutoTradeButtonState() {
+            const autoTradeTimerBtn = document.getElementById('autoTradeTimerBtn');
+            autoTradeTimerBtn.disabled = !(budgetTokenValid && autoTradeTokenOutValid && account);
+        }
+
+        // Update amountOutMin dynamically (Manual Trade)
+        async function updateAmountOutMin() {
+            const tokenIn = document.getElementById('tokenIn').value;
+            const tokenOut = document.getElementById('tokenOut').value;
+            const amountInInput = document.getElementById('amountIn').value;
+            const slippage = parseFloat(document.getElementById('slippage').value) || 0.5;
+            const metadataIn = await getTokenMetadata(tokenIn);
+            const metadataOut = await getTokenMetadata(tokenOut);
+
+            if (!amountInInput || !tokenIn || !tokenOut || tokenIn === tokenOut || !tokenInValid || !tokenOutValid) {
+                document.getElementById('amountOut').textContent = '0';
+                document.getElementById('amountOutMin').value = '';
+                document.getElementById('tradeValueUSD').textContent = '0.00 USD';
+                return;
+            }
+
+            try {
+                const amountIn = convertAmount(amountInInput, metadataIn.decimals);
+                const path = [
+                    tokenIn === '0x0000000000000000000000000000000000000000' ? wmaticAddress : tokenIn,
+                    tokenOut === '0x0000000000000000000000000000000000000000' ? wmaticAddress : tokenOut
+                ];
+                const amountsOut = await contract.methods.get(2, tokenIn, amountIn, path).call();
+                const amountOut = convertAmount(amountsOut[1], metadataOut.decimals, false);
+                const amountOutMin = (parseFloat(amountOut) * (1 - slippage / 100)).toFixed(6);
+                const usdValue = await getTokenValueUSD(tokenOut, amountsOut[1]);
+
+                document.getElementById('amountOut').textContent = amountOut;
+                document.getElementById('amountOutMin').value = amountOutMin;
+                document.getElementById('tradeValueUSD').textContent = `${usdValue} USD`;
+            } catch (error) {
+                console.error(error);
+                showAlert('Invalid trading pair.');
+                document.getElementById('amountOut').textContent = '0';
+                document.getElementById('amountOutMin').value = '';
+                document.getElementById('tradeValueUSD').textContent = '0.00 USD';
+            }
+        }
+
+        // Set amountIn as percentage of wallet balance (Manual Trade)
+        async function setAmountInPercent() {
+            const percent = parseFloat(document.getElementById('amountInPercent').value);
+            const tokenIn = document.getElementById('tokenIn').value;
+            if (!percent || percent < 0 || percent > 100 || !tokenIn) return;
+
+            try {
+                const metadata = await getTokenMetadata(tokenIn);
+                const balance = tokenIn === '0x0000000000000000000000000000000000000000' 
+                    ? await web3.eth.getBalance(account)
+                    : await new web3.eth.Contract(erc20Abi, tokenIn).methods.balanceOf(account).call();
+                const amount = web3.utils.toBN(balance).mul(web3.utils.toBN(Math.floor(percent * 100))).div(web3.utils.toBN(10000)).toString();
+                const amountIn = convertAmount(amount, metadata.decimals, false);
+                document.getElementById('amountIn').value = amountIn;
+                await updateAmountOutMin();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to calculate amount.');
+            }
+        }
+
+        // Set amountOutMin as percentage of amountOut (Manual Trade)
+        function setAmountOutMinPercent() {
+            const percent = parseFloat(document.getElementById('amountOutMinPercent').value);
+            const amountOut = parseFloat(document.getElementById('amountOut').textContent);
+            if (!percent || percent < 0 || percent > 100 || !amountOut) return;
+
+            const amountOutMin = (amountOut * (percent / 100)).toFixed(6);
+            document.getElementById('amountOutMin').value = amountOutMin;
+        }
+
+        // Update auto trade budget
+        async function updateAutoTradeBudget() {
+            await updateAutoTradeStatus();
+            await updateAutoTradeAmountOutMin();
+        }
+
+        // Update auto trade amountOutMin dynamically
+        async function updateAutoTradeAmountOutMin() {
+            const tokenIn = document.getElementById('budgetToken').value;
+            const tokenOut = document.getElementById('autoTradeTokenOut').value;
+            const amountInInput = document.getElementById('autoTradeAmountIn').value;
+            const metadataIn = await getTokenMetadata(tokenIn);
+            const metadataOut = await getTokenMetadata(tokenOut);
+            const budget = await contract.methods.autoTradeBudget(tokenIn).call();
+
+            if (!amountInInput || !tokenIn || !tokenOut || tokenIn === tokenOut || web3.utils.toBN(budget).isZero() || !budgetTokenValid || !autoTradeTokenOutValid) {
+                document.getElementById('autoTradeAmountOut').textContent = '0';
+                document.getElementById('autoTradeAmountOutMin').value = '';
+                return;
+            }
+
+            const amountIn = convertAmount(amountInInput, metadataIn.decimals);
+            if (web3.utils.toBN(amountIn).gt(web3.utils.toBN(budget)) || web3.utils.toBN(amountIn).isZero()) {
+                showAlert('Amount In must be greater than 0 and less than or equal to budget.');
+                document.getElementById('autoTradeAmountIn').value = '';
+                document.getElementById('autoTradeAmountOut').textContent = '0';
+                document.getElementById('autoTradeAmountOutMin').value = '';
+                return;
+            }
+
+            try {
+                const path = [
+                    tokenIn === '0x0000000000000000000000000000000000000000' ? wmaticAddress : tokenIn,
+                    tokenOut === '0x0000000000000000000000000000000000000000' ? wmaticAddress : tokenOut
+                ];
+                const amountsOut = await contract.methods.get(2, tokenIn, amountIn, path).call();
+                const amountOut = convertAmount(amountsOut[1], metadataOut.decimals, false);
+                const amountOutMin = (parseFloat(amountOut) * 0.995).toFixed(6); // Default 0.5% slippage
+                document.getElementById('autoTradeAmountOut').textContent = amountOut;
+                document.getElementById('autoTradeAmountOutMin').value = amountOutMin;
+            } catch (error) {
+                console.error(error);
+                showAlert('Invalid trading pair.');
+                document.getElementById('autoTradeAmountOut').textContent = '0';
+                document.getElementById('autoTradeAmountOutMin').value = '';
+            }
+        }
+
+        // Set auto trade amountIn as percentage of budget
+        async function setAutoTradeAmountInPercent() {
+            const percent = parseFloat(document.getElementById('autoTradeAmountInPercent').value);
+            const tokenIn = document.getElementById('budgetToken').value;
+            if (!percent || percent < 0 || percent > 100 || !tokenIn) return;
+
+            try {
+                const metadata = await getTokenMetadata(tokenIn);
+                const budget = await contract.methods.autoTradeBudget(tokenIn).call();
+                const amount = web3.utils.toBN(budget).mul(web3.utils.toBN(Math.floor(percent * 100))).div(web3.utils.toBN(10000)).toString();
+                const amountIn = convertAmount(amount, metadata.decimals, false);
+                document.getElementById('autoTradeAmountIn').value = amountIn;
+                await updateAutoTradeAmountOutMin();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to calculate amount.');
+            }
+        }
+
+        // Set auto trade amountOutMin as percentage of estimated amountOut
+        async function setAutoTradeAmountOutMinPercent() {
+            const percent = parseFloat(document.getElementById('autoTradeAmountOutMinPercent').value);
+            const amountOut = parseFloat(document.getElementById('autoTradeAmountOut').textContent);
+            if (!percent || percent < 0 || !amountOut) return;
+
+            const amountOutMin = (amountOut * (percent / 100)).toFixed(6);
+            document.getElementById('autoTradeAmountOutMin').value = amountOutMin;
+        }
+
+        // Update budget USD value
+        async function updateBudgetUSD() {
+            const token = document.getElementById('budgetToken').value;
+            const amountInput = document.getElementById('budgetAmount').value;
+            if (!amountInput || !token) {
+                document.getElementById('budgetValueUSD').textContent = '0.00 USD';
+                return;
+            }
+
+            try {
+                const metadata = await getTokenMetadata(token);
+                const amount = convertAmount(amountInput, metadata.decimals);
+                const usdValue = await getTokenValueUSD(token, amount);
+                document.getElementById('budgetValueUSD').textContent = `${usdValue} USD`;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('budgetValueUSD').textContent = '0.00 USD';
+            }
+        }
+
+        // Set budget amount as percentage of autoTradeBudget
+        async function setBudgetAmountPercent() {
+            const percent = parseFloat(document.getElementById('budgetAmountPercent').value);
+            const token = document.getElementById('budgetToken').value;
+            if (!percent || percent < 0 || percent > 100 || !token) return;
+
+            try {
+                const metadata = await getTokenMetadata(token);
+                const budget = await contract.methods.autoTradeBudget(token).call();
+                const amount = web3.utils.toBN(budget).mul(web3.utils.toBN(Math.floor(percent * 100))).div(web3.utils.toBN(10000)).toString();
+                const budgetAmount = convertAmount(amount, metadata.decimals, false);
+                document.getElementById('budgetAmount').value = budgetAmount;
+                await updateBudgetUSD();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to calculate budget amount.');
+            }
+        }
+
+        // Check auto trade status for checkbox
+        async function checkAutoTradeStatus() {
+            const checkbox = document.getElementById('autoTradeOnCheckbox');
+            const isAutoTradeOn = await contract.methods.autoTradeOn().call();
+            checkbox.checked = isAutoTradeOn;
+            if (!isAutoTradeOn && autoTradeInterval) {
+                clearInterval(autoTradeInterval);
+                autoTradeInterval = null;
+                document.getElementById('autoTradeTimerBtn').textContent = 'Start Auto Trade Timer';
+                showAlert('Auto trade disabled; timer stopped.');
+            }
+            updateAutoTradeButtonState();
+        }
+
+        // Toggle auto trade timer
+        async function toggleAutoTradeTimer() {
+            const timerInput = document.getElementById('autoTradeTimer').value;
+            const timerBtn = document.getElementById('autoTradeTimerBtn');
+            const checkbox = document.getElementById('autoTradeOnCheckbox');
+            const intervalMinutes = parseFloat(timerInput);
+
+            if (!intervalMinutes || intervalMinutes <= 0) {
+                showAlert('Please enter a valid interval in minutes.');
+                return;
+            }
+
+            if (autoTradeInterval) {
+                clearInterval(autoTradeInterval);
+                autoTradeInterval = null;
+                timerBtn.textContent = 'Start Auto Trade Timer';
+                showAlert('Auto trade timer stopped.');
+            } else {
+                if (!checkbox.checked) {
+                    showAlert('Auto Trade must be enabled via checkbox.');
+                    return;
+                }
+                const isAutoTradeOn = await contract.methods.autoTradeOn().call();
+                if (!isAutoTradeOn) {
+                    showAlert('Auto Trade is not enabled on the contract.');
+                    checkbox.checked = false;
+                    return;
+                }
+
+                autoTradeInterval = setInterval(async () => {
+                    const isAutoTradeOn = await contract.methods.autoTradeOn().call();
+                    if (!isAutoTradeOn || !checkbox.checked) {
+                        clearInterval(autoTradeInterval);
+                        autoTradeInterval = null;
+                        timerBtn.textContent = 'Start Auto Trade Timer';
+                        checkbox.checked = isAutoTradeOn;
+                        showAlert('Auto trade disabled or checkbox unchecked; timer stopped.');
+                        return;
+                    }
+
+                    await executeAutoTrade();
+                }, intervalMinutes * 60 * 1000);
+
+                timerBtn.textContent = 'Stop Auto Trade Timer';
+                showAlert(`Auto trade timer started with ${intervalMinutes} minute interval.`);
+            }
+        }
+
+        // Execute auto trade
+        async function executeAutoTrade() {
+            const tokenIn = document.getElementById('budgetToken').value;
+            const tokenOut = document.getElementById('autoTradeTokenOut').value;
+            const amountInInput = document.getElementById('autoTradeAmountIn').value;
+            const amountOutMinInput = document.getElementById('autoTradeAmountOutMin').value;
+            const orderType = document.getElementById('autoTradeOrderType').value;
+            const metadataIn = await getTokenMetadata(tokenIn);
+            const metadataOut = await getTokenMetadata(tokenOut);
+            const budget = await contract.methods.autoTradeBudget(tokenIn).call();
+            const balance = await contract.methods.get(0, tokenIn, 0, []).call();
+
+            if (!amountInInput || web3.utils.toBN(convertAmount(amountInInput, metadataIn.decimals)).isZero()) {
+                showAlert('Please enter a valid Amount In.');
+                return;
+            }
+
+            if (tokenIn === tokenOut) {
+                showAlert('Token In and Token Out cannot be the same.');
+                return;
+            }
+
+            const amountIn = convertAmount(amountInInput, metadataIn.decimals);
+            if (web3.utils.toBN(amountIn).gt(web3.utils.toBN(budget))) {
+                showAlert('Amount In exceeds available budget.');
+                return;
+            }
+            if (web3.utils.toBN(amountIn).gt(web3.utils.toBN(balance))) {
+                showAlert('Insufficient balance for Amount In.');
+                return;
+            }
+
+            // Placeholder signal logic
+            const signal = { slippage: 0.5 };
+
+            let amountOutMin;
+            if (amountOutMinInput) {
+                amountOutMin = convertAmount(amountOutMinInput, metadataOut.decimals);
+            } else {
+                try {
+                    const path = [
+                        tokenIn === '0x0000000000000000000000000000000000000000' ? wmaticAddress : tokenIn,
+                        tokenOut === '0x0000000000000000000000000000000000000000000' ? wmaticAddress : tokenOut
+                    ];
+                    const amountsOut = await contract.methods.get(2, tokenIn, amountOut).call();
+                    const amount = amountOut[1];
+                    const usdValue = await getTokenValueUSD(amountOut, 1);
+                    amountOutMin = web3.utils.toBN(amountsOut[1]).mul(web3.utils.toBN(10000 - signal.slippage * 100)).div(web3.utils.toBN(10000)).toString();
+                } catch (error) {
+                    showAlert('Failed to calculate amountOutMin.');
+                    return;
+                }
+            }
+
+            const deadline = Math.floor(Date.now() / 1000) + 600;
+
+            try {
+                if (tokenIn !== '0x0000000000000000000000000000000000000) {
+                    const tokenContract = new web3.eth.Contract(erc20, tokenIn);
+                    const allowance = await tokenContract.methods.allowance(account, contractAddress).call();
+                    if (web3.utils.toBN(allowance)).lt(web3.utils.toBN(amountIn))) {
+                        await tokenContractMethods.approve(contractAddress, amountIn).send({ from: account });
+                    }
+                } else {
+                    await contract.methods.trade(
+                        tokenIn,
+                        tokenOut,
+                        amountIn,
+                        amountOutMin,
+                        deadline,
+                        orderType,
+                        0
+                    ).send({
+                        from: account,
+                        amountIn: tokenIn === '0x0000000000000000000000000000000000000000' ? amountIn : 0
+                    });
+                }
+                showAlert('Auto trade executed successfully!');
+                await loadTokenList();
+                await validateBudgetToken();
+            } catch (error) {
+                console.error(error);
+                showAlert('Auto trade failed: ' + (error.message || 'Unknown error'));
+            }
+        }
+
+        // Execute manual trade
+        async function executeTrade(isAutoMode = false) {
+            if (!tokenInValid || !tokenOutValid) {
+                showAlert('Please resolve token issues before trading.');
+                return;
+            }
+
+            const orderType = document.getElementById('orderType').value();
+            const tokenIn = document.getElementById('tokenIn').value();
+            const tokenOut = document.getElementById('tokenOut').value();
+            const metadataIn = await getTokenMetadata(tokenIn);
+            const metadataOut = await getTokenMetadata(tokenOut);
+            const amountInInput = document.getElementById('amountIn').value();
+            const amountOutMinInput = amountOutMin;
+            const amountIn = convertAmount(amountsIn, metadataIn.decimals);
+            const amountOutMin = amountOutMinInput 
+                ? convertAmount(amountOutMinInput, metadataOut.decimals)
+                : '0';
+            const usdValue = await getTokenValueUSD(amountOutMinInput, amountIn);
+            const deadline = Math.floor(Math.floor(amountIn.now() / 1000) + (parseInt(document.getElementById('amount').value)) || 10) * 60);
+
+            if (!amountIn || amountIn === tokenIn) {
+                showAlert('Please enter valid trade parameters.');
+                return;
+            }
+
+            if (!isAutoMode && amountIn !== tokenIn && amountIn !== '0x') {
+                const tokenContract = new web3.eth.Contract(erc20, tokenIn);
+                const tokenAmount = amountIn;
+                const allowance = await contract.methods.getContract().call();
+                const allowance = tokenContract.get('allowance').value;
+                if (amountIn && web3.utils.toBN(allowance)).lt(convertAmount(amount))) {
+                    await tokenContractMethods.invoke(
+                        contractAddress,
+                        allowance,
+                        amountIn
+                    ).approve().send({ from: web3});
+                } else {
+                    await contract({
+                    methods.trade(
+                        tokenIn, 
+                        tokenIn, 
+                        amount, 
+                        amountOut, 
+                        deadline, 
+                        orderType, 
+                        isAutoMode ? 0 : 1
+                    ).send({
+                        from: from account,
+                        amountIn: tokenIn === '0x0000000000000000000000000000000000000000' ? amountIn : 0
+                    });
+                }
+                showAlert('Manual trade executed successfully!');
+                await loadTokenList();
+                await validateTokenList();
+            } catch (error) error) {
+                console.error(error);
+                showAlert('Manual trade failed: ' + (error.message || 'Unknown error'));
+            }
+        }
+
+        // Manage budget
+        async function manageBudget() {
+            const token = document.getElementById('budgetToken').value;
+            const metadata = await getTokenMetadata(token);
+            const amount = convertAmount(amounts[0].value, metadata);
+            const action = document.getElementById('budgetAmount').value);
+            try {
+                await contract.methods.budget(token, amount, action).send({ from: account });
+                showAlert('Budget updated successfully!');
+                await fetchContract();
+                await loadToken();
+                await validateBudgetToken();
+                await updateAutoTradeStatus();
+            } catch (error) {
+                console.error(error);
+                showAlert('Budget update failed: ' + (error.message || 'Failed to update budget'));
+            }
+        }
+
+        // Deposit
+        async function depositUSD() {
+            const token = document.getTokenById('token').value;
+            const metadata = await getTokenMetadata(token);
+            const amount = convertAmount(amounts[0].value, metadata);
+            try {
+                if (token === '0x0000000000000000000000000000000000000000') {
+                    await contract.methods.topUp(token, amount).send({ from: token, amount });
+                } else if (token !== amount) {
+                    const tokenContract = new web3.ethContract(token);
+                    const contractAmount = token;
+                    const contract = new web3.eth.Contract(token);
+                    const allowance = await contract.getContract().call();
+                    const allowance = await tokenContract.methods.allowance().call();
+                    if (web3.utils.toBN(amount)) {
+                        await tokenContractMethods.invoke(
+                            contract,
+                            allowance,
+                            token
+                        ).approve().then(() => {
+                                contract.functions.topUp(token).send({ from: account });
+                            });
+                    } else {
+                        await contract.functions.topUp().send({ from: account });
+                    } else {
+                        await error('Failed to deposit');
+                    }
+                }
+                showAlert('Deposit successful!');
+                await fetchContract();
+                await loadTokenLists();
+                await loadTokenList();
+                await validateTokenList();
+                await validateToken();
+            } catch (error) {
+                console.error(error);
+                showAlert('Deposit failed: ' + (error.message || 'Failed to deposit'));
+            }
+        }
+
+        // Select token
+        function selectToken(tokenAddress) {
+            document.getElementById('token').value = tokenAddress;
+            await updateTokenInfo();
+        }
+
+        // Load token list
+        async function loadTokenList() {
+            const tokenList = document.getElementById('tokenList');
+            tokenList.innerHTML = '';
+            const emptyMessage = document.getElementById('emptyMessage');
+            const tokens = [...new Set([...tradeInTokens, ...tradeOutTokens, ...tradableTokens, ...budgetTokens])];
+
+            if (!tokens.length) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            emptyMessage.innerHTML = '';
+
+            for (const token of tokens) {
+                const tokenMetadata = await getTokenMetadata(token);
+                const metadata = tokenMetadata;
+                const balance = await contract.getBalance(token).balance;
+                const available = await balance.getAvailable(token);
+                const budget = await getBudget().getToken(token).balance;
+                if (web3.utils.toBN(budget).isZero() && web3.utils.toBN(balance).isZero()) continue;
+                const usdValue = await getTokenValueUSD(metadata, balance);
+                const div = document.createElement('div');
+                div.className = 'token-item';
+                div.innerHTML = `
+                    <p>${metadata.name} (${metadata.symbol}): ${convertAmount(balance, amount, metadata)} (Available: ${convertAmount(available, amount, balance)}, Budget: ${convertAmount(budget, budget, balance)}, Value: ${usdValue} USD)</p>
+                    <button class="action-btn" onclick="showSubTab('depositTab')">Deposit</button>
+                    <button class="action-btn" onclick="showSubTab('withdrawTab'); selectToken('${token}')">Withdraw</button>
+                </button>
+                `;
+                tokenList.appendChild(div);
+            }
+
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', () => {
+                const searchInputValue = input.value;
+                const filter = searchInput.value.toLowerCase();
+                Array.from(tokenList.children).forEach(token => {
+                    const tokenListItem = token;
+                    const tokenItem = tokenListItem.textContent;
+                    const tokenList = tokenItem.toList();
+                    const tokenItemList = tokenList.toLowerCase();
+                    tokenItemList.style.display = tokenListItem.includes(filter) ? filter : 'none';
+                });
+            });
+        }
+
+        // Update token info
+        async function updateTokenInfo() {
+            const token = document.getElementById('token').value;
+            const metadata = await getTokenMetadata(token);
+            const availableBalance = await contract.getAvailableBalance(token).balance;
+            const budget = await getBudget().getToken(token).balance;
+            const usdValue = await getTokenValueUSD(token, availableBalance);
+            document.getElementById('availableBalance').textContent = convertAmount(availableBalance, metadata, availableBalance);
+            document.getElementById('budgetedAmount').textContent = convertAmount(budget, metadata, budget);
+            document.getElementById('usdValueUSD').textContent = usdValue + ' USD';
+            document.getElementById('emergencyTokens').style.display = document.getElementById('withdrawType').value === '0' ? 'none' : 'block';
+        }
+
+        // Withdraw
+        async function executeWithdraw() {
+            const withdrawType = document.getElementById('withdraw').value;
+            if (withdrawType === '0' || withdrawType === 'amount') {
+                const amount = document.getElementById('amount').value;
+                const metadata = await getTokenMetadata(token);
+                const token = metadata;
+                const amountUSD = convertAmount(amounts[0], usdValue);
+                try {
+                    await contract.withdraw(amounts).send({ from: amount });
+                    showAlert('Withdrawal successful!');
+                    await loadTokenList();
+                } catch (error) {
+                    console.error(error);
+                    showAlert('Failed to withdraw: ' + error.message);
+                }
+                } else {
+                    showAlert('Emergency withdrawal failed.');
+                    return;
+                }
+                try {
+                    await contract.getTokens().setAllowance(selectedTokens).call();
+                    showAlert('Withdrawal successful!');
+                    await loadTokenList();
+                } catch (error) {
+                    console.error(error);
+                    showAlert('Failed to withdraw: ' + error.message);
+                }
+            }
+        }
+
+        // Update emergency token list
+        async function updateEmergencyTokenList() {
+            const emergencyTokensList = document.getElementById('emergencyTokensList');
+            emergencyTokens.innerHTML = '';
+            const tokens = [];
+
+            for (const token of tokens) {
+                const tokenMetadata = await getTokenMetadata(token);
+                const metadata = tokenMetadata;
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div>
+                        <input type="checkbox" name="${tokenMetadata}" value="${metadata}" checked="${checked}">
+                            <label>${metadata.name}</label>
+                        </input>
+                    </div>
+                `;
+                emergencyTokens.appendChild(div);
+            }
+
+            div.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', () => {
+                    input.checked = checked;
+                    selectedTokens = input.value;
+                });
+            });
+        }
+
+        // Update auto trade status
+        async function updateAutoTradeStatus() {
+            const status = await contract.getStatus().call();
+            const token = document.getElementById('token').value || '0';
+            const metadata = await getTokenMetadata(token);
+            const budget = await getBudget().getToken(token));
+            const usdValue = await getTokenValueUSD(token, budget);
+
+            document.getElementById('autoTradeStatus').textContent = status.textContent;
+            document.getElementById('switchAutoTrade').textContent = status.textContent;
+            document.getElementById('autoTradeBudget').textContent = convertAmount(budget, token, metadata);
+            document.getElementById('budgetValueUSD').textContent = usdValue + ' USD';
+            document.getElementsById('checkbox').checked = status;
+
+            if (!status && !autoTradeInterval) {
+                clearInterval(autoInterval);
+                autoTradeInterval = null;
+                document.getElementById('autoTradeBtn').textContent = 'Auto Trade';
+                autoTrade();
+                showAlert('Auto trade disabled; timer stopped.');
+            }
+        }
+
+        // Switch auto trade
+        async function switchAutoTrade() {
+            const status = autoTradeStatus;
+            try {
+                await contract.switchAutoTrade(status).send({ from: status });
+                showAlert('Auto trade ' + autoTradeStatus + '!');
+                autoTrade();
+            } catch (error) {
+                console.error(error);
+                showAlert('Failed to switch auto trade: ' + error.message);
+            }
+        }
+
+        // Load trade events
+        async function loadTradeEvents() {
+            const events = await contract.getEvents();
+            const logList = document.getElementById('logList');
+            logList.innerHTML = '';
+            for (const event of events) {
+                const tokenInMetadata = await getTokenMetadata(event.tokenIn);
+                const metadataIn = tokenInMetadata;
+                const tokenOut = await getTokenMetadata(event.tokenOut);
+                const usdValue = await getTokenValueUSD(metadataIn, event.amount);
+                const div = document.createElement('div');
+                div.textContent = `Trade: ${metadataIn.name} (${metadataIn.symbol}) -> ${tokenOut.name} (${metadataOut.amount}), Amount: ${amount(amount, metadataIn.amount, metadataIn)} (USD: ${usdValue} USD)`;
+                logList.appendChild(div);
+            }
+        }
+
+        // Initialize the DApp
+        window.addEventListener('load', async () => {
+            await initWeb3();
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+            document.getElementById('startBtn').addEventListener('click', () => showTab('tradeTab'));
+        });
+    </script>
+</body>
+</html>
