@@ -1096,14 +1096,326 @@
 	}
 ];
         const erc20Abi = [
-            {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"stateMutability":"view","type":"function"},
-            {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"stateMutability":"view","type":"function"},
-            {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
-            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"stateMutability":"view","type":"function"},
-            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
-            {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
-        ];
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "initialSupply",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "allowance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "needed",
+				"type": "uint256"
+			}
+		],
+		"name": "ERC20InsufficientAllowance",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "balance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "needed",
+				"type": "uint256"
+			}
+		],
+		"name": "ERC20InsufficientBalance",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "approver",
+				"type": "address"
+			}
+		],
+		"name": "ERC20InvalidApprover",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			}
+		],
+		"name": "ERC20InvalidReceiver",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "ERC20InvalidSender",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			}
+		],
+		"name": "ERC20InvalidSpender",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			}
+		],
+		"name": "allowance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "decimals",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+];
 
         let web3, contract, account, isOwner = false;
         const navigationStack = [];
@@ -1121,37 +1433,96 @@
 
         // Initialize Web3
         async function initWeb3() {
-            if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                contract = new web3.eth.Contract(abi, contractAddress);
-                await fetchContractTokens();
-                await loadTokenLists();
-                await updateAutoTradeStatus();
-                await loadTradeEvents();
-                await loadSettingsEvents();
-                subscribeToContractEvents();
-            } else {
-                showAlert('Please install MetaMask!');
-            }
+    try {
+        if (!window.ethereum) {
+            showAlert('MetaMask is not installed! Please install MetaMask.');
+            console.error('MetaMask not detected');
+            return;
         }
+        web3 = new Web3(window.ethereum);
+        console.log('Web3 initialized:', web3.version);
+
+        // Initialize contract
+        try {
+            contract = new web3.eth.Contract(abi, contractAddress);
+            console.log('Contract initialized at address:', contractAddress);
+        } catch (abiError) {
+            console.error('Contract initialization failed. Check ABI:', abiError);
+            showAlert('Failed to initialize contract. Please check the ABI and contract address.');
+            return;
+        }
+
+        // Fetch initial data
+        await fetchContractTokens();
+        await loadTokenLists();
+        await updateAutoTradeStatus();
+        await loadTradeEvents();
+        await loadSettingsEvents();
+        subscribeToContractEvents();
+        console.log('Initial data loaded successfully');
+    } catch (error) {
+        console.error('Web3 initialization failed:', error);
+        showAlert(`Failed to initialize Web3: ${error.message || 'Unknown error'}`);
+    }
+}
 
         // Connect wallet
         async function connectWallet() {
+    try {
+        if (!window.ethereum) {
+            showAlert('MetaMask is not installed! Please install MetaMask and try again.');
+            console.error('MetaMask not detected');
+            return;
+        }
+        // Request account access
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) {
+            showAlert('No accounts found. Please unlock MetaMask or connect an account.');
+            return;
+        }
+        account = accounts[0];
+        console.log('Connected account:', account);
+        document.getElementById('connectBtn').textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+
+        // Verify network (Polygon Mainnet, Chain ID 137)
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chainId !== '0x89') { // 0x89 = 137 in hex
+            showAlert('Please switch to the Polygon Mainnet in MetaMask.');
             try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                account = accounts[0];
-                document.getElementById('connectBtn').textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
-                isOwner = await contract.methods.owner().call() === account;
-                await loadTokenList();
-                await validateTokenIn();
-                await validateTokenOut();
-                await validateBudgetToken();
-                await validateAutoTradeTokenOut();
-            } catch (error) {
-                console.error(error);
-                showAlert('Failed to connect wallet.');
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x89' }],
+                });
+            } catch (switchError) {
+                console.error('Network switch failed:', switchError);
+                showAlert('Failed to switch to Polygon Mainnet. Please switch manually in MetaMask.');
+                return;
             }
         }
+
+        // Check if contract is properly initialized
+        if (!contract) {
+            console.error('Contract not initialized. Check ABI and contract address.');
+            showAlert('Contract initialization failed. Please check the console for details.');
+            return;
+        }
+
+        // Check ownership
+        isOwner = (await contract.methods.owner().call()) === account;
+        console.log('Is owner:', isOwner);
+
+        // Load necessary data
+        await loadTokenList();
+        await validateTokenIn();
+        await validateTokenOut();
+        await validateBudgetToken();
+        await validateAutoTradeTokenOut();
+        showAlert('Wallet connected successfully!');
+    } catch (error) {
+        console.error('Wallet connection failed:', error);
+        showAlert(`Failed to connect wallet: ${error.message || 'Unknown error'}`);
+    }
+}
 
         // Disconnect wallet
         function disconnectWallet() {
